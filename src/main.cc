@@ -6,13 +6,7 @@
 #include <iostream>
 #include "truth_table.h"
 
-
-void slice(std::size_t ix, std::size_t nn) {
-  for (std::size_t i = 0; i < nn; ++i) {
-    if ((i & (1 << ix)) > 0) { std::cout << 1; } else { std::cout << 0; }
-  }
-  std::cout << '\n';
-}
+#include "gf256.h"
 
 
 template <Mode mode>
@@ -25,23 +19,8 @@ void test_eval() {
 
 
   TruthTable f(3, 2);
-  f.set(0, 0, false);
   f.set(1, 0, true);
-  f.set(2, 0, false);
-  f.set(3, 0, false);
-  f.set(4, 0, false);
-  f.set(5, 0, false);
-  f.set(6, 0, false);
-  f.set(7, 0, false);
-
   f.set(0, 1, true);
-  f.set(1, 1, false);
-  f.set(2, 1, false);
-  f.set(3, 1, false);
-  f.set(4, 1, false);
-  f.set(5, 1, false);
-  f.set(6, 1, false);
-  f.set(7, 1, false);
 
 
   std::cout << f << '\n';
@@ -61,78 +40,37 @@ void test_eval() {
 }
 
 
-template <Mode mode>
-void test_point() {
+std::bitset<2> gf4mult(std::bitset<2> a, std::bitset<2> b) {
+  const std::bitset<2> mask = 1;
+  const auto a0 = a & mask;
+  const auto a1 = (a & ~mask) >> 1;
+  const auto b0 = b & mask;
+  const auto b1 = (b & ~mask) >> 1;
+  const auto a1b1 = a1 & b1;
 
-  std::vector<Share<mode>> x(3);
-  std::vector<Share<mode>> point(8);
-  x[0] = Share<mode>::ginput(false);
-  x[1] = Share<mode>::ginput(true);
-  x[2] = Share<mode>::ginput(true);
-
-  std::cout << privacy_free_point<mode>(x, point) << '\n';
-
-  for (auto p: point) {
-    std::cout << p;
-    if constexpr (mode == Mode::G) {
-      std::cout << ' ' << (p ^ Share<mode>::constant(true));
-    }
-    std::cout << '\n';
-  }
-  std::cout << '\n';
-}
-
-
-template <Mode mode>
-void test_half_random() {
-  TruthTable tt(3, 2);
-
-  std::vector<Share<mode>> x(3);
-  std::vector<Share<mode>> point(8);
-  x[0] = Share<mode>::ginput(false);
-  x[1] = Share<mode>::ginput(true);
-  x[2] = Share<mode>::ginput(true);
-
-  std::cout << privacy_free_point<mode>(x, point) << '\n';
-
-
-  std::vector<Share<mode>> rx(2);
-
-  /* half_random_function<mode>(0, x, point, tt, rx); */
-  random_function<mode>(x, point, tt, rx);
-
-  if constexpr (mode == Mode::G) {
-    std::cout << tt << "\n";
-  }
-
-  for (auto p: rx) {
-    std::cout << p;
-    if constexpr (mode == Mode::G) {
-      std::cout << ' ' << (p ^ Share<mode>::constant(true));
-    }
-    std::cout << '\n';
-  }
-  std::cout << '\n';
+  return (((a1&b0) ^ (a0&b1) ^ a1b1) << 1) ^ (a1b1 ^ (a0&b0));
 }
 
 
 int main() {
-  Share<Mode::G>::delta = PRG()() | std::bitset<128> { 1 };
-  Share<Mode::G>::nonce = 0;
-  Share<Mode::G>::fixed_key = PRF();
+  /* Share<Mode::G>::delta = PRG()() | std::bitset<128> { 1 }; */
+  /* Share<Mode::G>::nonce = 0; */
+  /* Share<Mode::G>::fixed_key = PRF(); */
 
-  Share<Mode::E>::delta = 0;
-  Share<Mode::E>::nonce = 0;
-  Share<Mode::E>::fixed_key = Share<Mode::G>::fixed_key;
+  /* Share<Mode::E>::delta = 0; */
+  /* Share<Mode::E>::nonce = 0; */
+  /* Share<Mode::E>::fixed_key = Share<Mode::G>::fixed_key; */
 
-  /* test_half_random<Mode::G>(); */
-  /* test_half_random<Mode::E>(); */
-  test_eval<Mode::G>();
-  test_eval<Mode::E>();
+  /* test_eval<Mode::G>(); */
+  /* test_eval<Mode::E>(); */
 
+  std::uint64_t mask = 0xaaaaaaaaaaaaaaaa;
+  std::bitset<128> onezero = mask;
+  onezero <<= 64;
+  onezero |= mask;
+  const auto zeroone = onezero >> 1;
 
-/*   for (int i = 0; i < 3; ++i) { */
-/*     std::cout << TruthTable::input_column(3, 1, i) << '\n'; */
-/*   } */
-
+  std::cout << (int)mul_gf256(55, 55) << '\n';
+  std::cout << (int)invert_gf256(98) << '\n';
+  std::cout << (int)(mul_gf256(175, 98)) << '\n';
 }

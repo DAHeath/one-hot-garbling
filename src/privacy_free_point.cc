@@ -30,8 +30,8 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
   missing |= point[0].color();
   ++Share<mode>::nonce;
 
-  const auto one = Share<mode>::constant(true);
-  const auto zero = Share<mode>::constant(false);
+  const auto one = Share<mode>::bit(true);
+  const auto zero = Share<mode>::bit(false);
 
   // Now, iterate over the levels of the tree.
   for (std::size_t i = 1; i < n; ++i) {

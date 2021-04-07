@@ -14,8 +14,8 @@ void half_random_function(
 
   const auto sxi = sx[ix];
 
-  const auto one = Share<mode>::constant(true);
-  const auto zero = Share<mode>::constant(false);
+  const auto one = Share<mode>::bit(true);
+  const auto zero = Share<mode>::bit(false);
 
   const auto mask = TruthTable::input_column(n, m, n - ix - 1);
   if constexpr (mode == Mode::G) {

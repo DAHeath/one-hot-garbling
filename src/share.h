@@ -9,16 +9,39 @@
 #include <iomanip>
 
 
+inline std::bitset<128> zeroone() {
+  constexpr std::uint64_t half_zo = 0x5555555555555555;
+  std::bitset<128> zo = half_zo;
+  zo <<= 64;
+  zo |= half_zo;
+  return zo;
+}
+
+
+inline std::bitset<128> mulgf4(const std::bitset<128>& a, const std::bitset<128>& b) {
+  const static std::bitset<128> mask = zeroone();
+  const auto a0 = a & mask;
+  const auto a1 = (a & ~mask) >> 1;
+  const auto b0 = b & mask;
+  const auto b1 = (b & ~mask) >> 1;
+  const auto a1b1 = a1 & b1;
+
+  return (((a1&b0) ^ (a0&b1) ^ a1b1) << 1) ^ (a1b1 ^ (a0&b0));
+}
+
+
+
 template <Mode mode>
 struct Share {
 public:
   static inline std::bitset<128> delta;
+  static inline std::bitset<128> delta_gf4;
   static inline std::size_t nonce;
   static inline PRF fixed_key;
 
   constexpr Share() { }
   constexpr Share(std::bitset<128> val) : val(val) { }
-  constexpr static Share constant(bool b) {
+  constexpr static Share bit(bool b) {
     Share out;
     if constexpr (mode == Mode::E) { out.val = 0; }
     else {
@@ -27,7 +50,19 @@ public:
     return out;
   }
 
-  static Share bit(bool);
+  static Share gf4(std::bitset<2> x) {
+    Share out;
+    if constexpr (mode == Mode::E) {
+      out.val = 0;
+    } else {
+      static const auto zo = zeroone();
+      static const auto oz = zo << 1;
+
+      if (x[0]) { out.val ^= mulgf4(delta_gf4, zo); }
+      if (x[1]) { out.val ^= mulgf4(delta_gf4, oz); }
+    }
+    return out;
+  }
 
   static Share random();
 
@@ -39,7 +74,7 @@ public:
   }
 
   constexpr Share operator~() const {
-    return (*this) ^ constant(true);
+    return (*this) ^ bit(true);
   }
 
   Share H() const {

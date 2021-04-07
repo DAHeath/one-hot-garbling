@@ -24,7 +24,7 @@ template<> Share<Mode::E> Share<Mode::E>::recv() {
 
 template<> Share<Mode::G> Share<Mode::G>::ginput(bool b) {
   const auto out = g();
-  (Share<Mode::G>::constant(b) ^ out).send();
+  (Share<Mode::G>::bit(b) ^ out).send();
   return out;
 }
 
@@ -35,13 +35,13 @@ template<> Share<Mode::E> Share<Mode::E>::ginput(bool b) {
 
 
 template<> Share<Mode::G> Share<Mode::G>::random() {
-  const auto bit = g()[0];
-  return Share<Mode::G>::constant(bit);
+  const auto b = g()[0];
+  return Share<Mode::G>::bit(b);
 }
 
 
 template<> Share<Mode::E> Share<Mode::E>::random() {
-  return Share<Mode::E>::constant(false);
+  return Share<Mode::E>::bit(false);
 }
 
 

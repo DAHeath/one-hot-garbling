@@ -13,12 +13,6 @@ public:
 
   std::bitset<128> operator()() { return prf(nonce++); }
 
-  template <typename T>
-  void randomize(T* dst, std::size_t bytes) {
-    const auto src = (*this)();
-    memcpy(dst, &src, bytes);
-  }
-
 private:
   PRF prf;
   std::size_t nonce;
