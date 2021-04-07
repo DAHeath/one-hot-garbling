@@ -30,8 +30,15 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
   missing |= point[0].color();
   ++Share<mode>::nonce;
 
+  const auto one = Share<mode>::constant(true);
+  const auto zero = Share<mode>::constant(false);
+
   // Now, iterate over the levels of the tree.
   for (std::size_t i = 1; i < n; ++i) {
+
+    const auto key0 = point[i] ^ (point[i].color() ? zero : one);
+    const auto key1 = key0 ^ one;
+
     if constexpr (mode == Mode::G) {
       // Maintain xor sums of all odd seeds/all even seeds
       Share<mode> odds = std::bitset<128> { 0 };
@@ -45,13 +52,9 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
         odds ^= out[j*2 + 1];
       }
 
-      if (point[i].color()) {
-        (evens ^ (point[i].H())).send();
-        (odds ^ ((~point[i]).H())).send();
-      } else {
-        (evens ^ ((~point[i]).H())).send();
-        (odds ^ (point[i].H())).send();
-      }
+      (evens ^ (key0.H())).send();
+      (odds ^ (key1.H())).send();
+
       const auto bit = point[i].color();
       missing = (missing << 1) | bit;
     } else {

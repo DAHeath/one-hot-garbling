@@ -14,62 +14,39 @@ void half_random_function(
 
   const auto sxi = sx[ix];
 
+  const auto one = Share<mode>::constant(true);
+  const auto zero = Share<mode>::constant(false);
+
   const auto mask = TruthTable::input_column(n, m, n - ix - 1);
   if constexpr (mode == Mode::G) {
-    TruthTable table0, table1;
-    if (sxi.color()) {
-      table0 = TruthTable::random(n, m, *(sxi ^ Share<mode>::constant(true)));
-      table0 &= ~mask;
-      table1 = TruthTable::random(n, m, *sxi);
-      table1 &= mask;
-    } else {
-      table0 = TruthTable::random(n, m, *sxi);
-      table0 &= ~mask;
-      table1 = TruthTable::random(n, m, *(sxi ^ Share<mode>::constant(true)));
-      table1 &= mask;
-    }
+    // Depending on the color, G should swap which key encrypts which secrets
+    const auto key0 = sxi ^ (sxi.color() ? one : zero);
+    const auto key1 = key0 ^ one;
 
-    r ^= table0;
-    r ^= table1;
+    // Set up two halves of truth table according to possible labels of [|x_i|].
+    const auto table0 = TruthTable::random(n, m, *key0) & ~mask;
+    const auto table1 = TruthTable::random(n, m, *key1) & mask;
+    r ^= table0 ^ table1;
 
-
-    if constexpr (mode == Mode::G) {
-      TruthTable tt(n, m);
-      tt ^= table0;
-      tt ^= table1;
-    }
-
-    std::vector<Share<mode>> prod0(m);
-    std::vector<Share<mode>> prod1(m);
-
-    table0.template apply<mode>(sux, prod0);
-    table1.template apply<mode>(sux, prod1);
+    // Compute two possible half inner products.
+    const auto prod0 = table0.template apply<mode>(sux);
+    const auto prod1 = table1.template apply<mode>(sux);
 
     for (std::size_t j = 0; j < m; ++j) {
-      out[j] ^= prod0[j] ^ prod1[j];
-
-      if (sxi.color()) {
-        const auto X = (sxi ^ Share<mode>::constant(true)).H() ^ prod1[j];
-        const auto row = sxi.H() ^ prod0[j] ^ X;
-        row.send();
-        ++Share<mode>::nonce;
-        out[j] ^= X;
-      } else {
-        const auto X = sxi.H() ^ prod1[j];
-        const auto row = (sxi ^ Share<mode>::constant(true)).H() ^ prod0[j] ^ X;
-        row.send();
-        ++Share<mode>::nonce;
-        out[j] ^= X;
-      }
+      // Now, encrypt the two inner products corresponding to the part of the
+      // vector E does not hold.
+      // Garbled row reduction technique.
+      const auto X = key0.H() ^ prod1[j];
+      const auto row = key1.H() ^ prod0[j] ^ X;
+      row.send();
+      ++Share<mode>::nonce;
+      out[j] ^= prod0[j] ^ prod1[j] ^ X;
     }
   } else {
-    TruthTable partial_table = TruthTable::random(n, m, *sxi);
+    // Take inner product of half of truth table
+    (TruthTable::random(n, m, *sxi) & (sxi.color() ? mask : ~mask)).apply(sux, out);
 
-    partial_table &= sxi.color() ? mask : ~mask;
-
-    partial_table.apply(sux, out);
-
-
+    // Other half of inner product comes by decrypting the proper row
     for (std::size_t j = 0; j < m; ++j) {
       const auto row = Share<mode>::recv();
       out[j] ^= sxi.H();

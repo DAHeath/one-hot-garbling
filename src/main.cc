@@ -21,7 +21,7 @@ void test_eval() {
   std::vector<Share<mode>> fx(2);
   x[0] = Share<mode>::ginput(false);
   x[1] = Share<mode>::ginput(false);
-  x[2] = Share<mode>::ginput(true);
+  x[2] = Share<mode>::ginput(false);
 
 
   TruthTable f(3, 2);

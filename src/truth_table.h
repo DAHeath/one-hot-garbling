@@ -9,11 +9,19 @@
 #include <iostream>
 
 
+/**
+ * Truth table representation.
+ * Truth tables support arithmetic bitwise manipulations.
+ * WARNING: we handle truth tables w/ minimum 3 inputs; hence 8 bit values.
+ */
 struct TruthTable {
   public:
     TruthTable() { }
     TruthTable(std::size_t n, std::size_t m) : n(n), m(m), nn(1 << n), val(nn/8*m) { }
 
+    /**
+     * Construct a truth table that models a particular truth table input column in every column.
+     */
     static TruthTable input_column(std::size_t n, std::size_t m, std::size_t ix) {
       TruthTable tt(n, m);
 
@@ -30,6 +38,9 @@ struct TruthTable {
       return tt;
     }
 
+    /**
+     * Construct a random n input m output truth table from a PRG.
+     */
     static TruthTable random(std::size_t n, std::size_t m, const std::bitset<128>& seed) {
       PRG g(seed);
       TruthTable tt(n, m);
@@ -65,6 +76,18 @@ struct TruthTable {
       return *this;
     }
 
+    TruthTable operator^(const TruthTable& o) const {
+      TruthTable out = *this;
+      out ^= o;
+      return out;
+    }
+
+    TruthTable operator&(const TruthTable& o) const {
+      TruthTable out = *this;
+      out &= o;
+      return out;
+    }
+
     TruthTable operator~() const {
       TruthTable out(n, m);
       for (std::size_t i = 0; i < val.size(); ++i) {
@@ -88,7 +111,7 @@ struct TruthTable {
     template <Mode mode>
     void apply(
         std::span<const Share<mode>> inp,
-        std::span<Share<mode>> out) {
+        std::span<Share<mode>> out) const {
       assert(inp.size() == nn);
       assert(out.size() == m);
 
@@ -99,7 +122,13 @@ struct TruthTable {
           }
         }
       }
+    }
 
+    template <Mode mode>
+    std::vector<Share<mode>> apply(std::span<const Share<mode>> inp) const {
+      std::vector<Share<mode>> out(m);
+      apply<mode>(inp, out);
+      return out;
     }
 
     bool operator()(std::size_t i, std::size_t j) const {
@@ -143,7 +172,6 @@ struct TruthTable {
   private:
     std::size_t nn;
 
-    // WARNING: we handle truth tables w/ minimum 3 inputs; hence 8 bit values
     // the table is stored by column, then by row
     std::vector<std::uint8_t> val;
 };
