@@ -7,30 +7,9 @@
 #include "prg.h"
 
 #include <bitset>
+#include <span>
 #include <iostream>
 #include <iomanip>
-
-
-inline std::bitset<128> zeroone() {
-  constexpr std::uint64_t half_zo = 0x5555555555555555;
-  std::bitset<128> zo = half_zo;
-  zo <<= 64;
-  zo |= half_zo;
-  return zo;
-}
-
-
-inline std::bitset<128> mulgf4(const std::bitset<128>& a, const std::bitset<128>& b) {
-  const static std::bitset<128> mask = zeroone();
-  const auto a0 = a & mask;
-  const auto a1 = (a & ~mask) >> 1;
-  const auto b0 = b & mask;
-  const auto b1 = (b & ~mask) >> 1;
-  const auto a1b1 = a1 & b1;
-
-  return (((a1&b0) ^ (a0&b1) ^ a1b1) << 1) ^ (a1b1 ^ (a0&b0));
-}
-
 
 
 template <Mode mode>
@@ -38,7 +17,6 @@ struct Share {
 public:
   static inline std::size_t nonce;
   static inline PRF fixed_key;
-  static inline PRG prg;
 
   static void initialize(std::bitset<128> fixed_key, std::bitset<128> seed);
 
@@ -59,6 +37,34 @@ public:
     return (*this) ^ bit(true);
   }
 
+  // Pack up to 8 bits into a single label.
+  static Share pack(std::span<const Share> args) {
+    assert(args.size() <= 8 && args.size() > 0);
+
+    Share out = args[0];
+    for (std::size_t i = 1; i < args.size(); ++i) {
+      out ^= args[i].scale(1 << i);
+    }
+    return out;
+  }
+
+
+  void unpack(std::span<Share> out) const;
+
+
+  // Scale each byte of the label using multiplication in GF(256).
+  Share scale(std::uint8_t scalar) const {
+    Share scaled;
+    std::uint8_t inp[16];
+    std::uint8_t out[16];
+    memcpy(inp, &val, 16);
+    for (std::size_t i = 0; i < 16; ++i) {
+      out[i] = mul_gf256(scalar, inp[i]);
+    }
+    memcpy(&scaled.val, out, 16);
+    return scaled;
+  }
+
   Share H() const {
     return fixed_key(val ^ std::bitset<128> { nonce });
   }
@@ -76,6 +82,13 @@ public:
     return val[0];
   }
 
+  constexpr std::uint8_t color256() const {
+    std::uint8_t out = 0;
+    for (std::size_t i = 0; i < 8; ++i) {
+      out |= (val[i] << i);
+    }
+    return out;
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const Share<mode> s) {
     std::uint64_t xs[2];

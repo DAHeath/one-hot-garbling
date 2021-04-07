@@ -52,6 +52,31 @@ std::bitset<2> gf4mult(std::bitset<2> a, std::bitset<2> b) {
 }
 
 
+template <Mode mode>
+void test_pack() {
+  std::vector<Share<mode>> x(6);
+  x[0] = Share<mode>::ginput(0);
+  x[1] = Share<mode>::ginput(1);
+  x[2] = Share<mode>::ginput(1);
+  x[3] = Share<mode>::ginput(0);
+  x[4] = Share<mode>::ginput(0);
+  x[5] = Share<mode>::ginput(1);
+
+  const auto y = Share<mode>::pack(x);
+  std::cout << *y << '\n';
+
+  y.unpack(x);
+  for (auto p: x) {
+    std::cout << p;
+    if constexpr (mode == Mode::G) {
+      std::cout << ' ' << (p ^ Share<mode>::bit(true));
+    }
+    std::cout << '\n';
+  }
+  std::cout << '\n';
+}
+
+
 int main() {
   /* Share<Mode::G>::delta = PRG()() | std::bitset<128> { 1 }; */
   /* Share<Mode::G>::nonce = 0; */
@@ -68,8 +93,25 @@ int main() {
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
-  test_eval<Mode::G>();
-  test_eval<Mode::E>();
+  /* for (int j = 1; j < 256; ++j) { */
+  /*   std::cout << j << ' '; */
+  /*   for (int i = 1; i < 2; ++i) { */
+  /*     int z = mul_gf256(i << 1, j); */
+  /*     std::cout << (z < 2); */
+  /*   } */
+  /*   std::cout << '\n'; */
+  /* } */
+  /* for (int i = 0; i < 2; ++i) { */
+  /*   int z = mul_gf256(i << 1, 141); */
+  /*   std::cout << (i << 1) << "->" << z << '\t'; */
+  /* } */
+  /* std::cout << '\n'; */
+
+  test_pack<Mode::G>();
+  test_pack<Mode::E>();
+
+  /* test_eval<Mode::G>(); */
+  /* test_eval<Mode::E>(); */
 
   /* std::uint64_t mask = 0xaaaaaaaaaaaaaaaa; */
   /* std::bitset<128> onezero = mask; */
