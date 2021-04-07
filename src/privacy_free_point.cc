@@ -93,7 +93,7 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
       sum ^= out[i];
       ++Share<mode>::nonce;
     }
-    sum ^= Share<mode>::delta;
+    sum ^= Share<mode>::bit(true);
     sum.send();
   } else {
     const Share<mode> g_sum = Share<mode>::recv();

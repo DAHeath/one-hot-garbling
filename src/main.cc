@@ -31,7 +31,7 @@ void test_eval() {
   for (auto p: fx) {
     std::cout << p;
     if constexpr (mode == Mode::G) {
-      std::cout << ' ' << (p ^ Share<mode>::constant(true));
+      std::cout << ' ' << (p ^ Share<mode>::bit(true));
     }
     std::cout << '\n';
   }
@@ -61,16 +61,23 @@ int main() {
   /* Share<Mode::E>::nonce = 0; */
   /* Share<Mode::E>::fixed_key = Share<Mode::G>::fixed_key; */
 
-  /* test_eval<Mode::G>(); */
-  /* test_eval<Mode::E>(); */
+  PRG g;
+  const auto key = g();
+  const auto seed = g();
 
-  std::uint64_t mask = 0xaaaaaaaaaaaaaaaa;
-  std::bitset<128> onezero = mask;
-  onezero <<= 64;
-  onezero |= mask;
-  const auto zeroone = onezero >> 1;
+  Share<Mode::G>::initialize(key, seed);
+  Share<Mode::E>::initialize(key, seed);
 
-  std::cout << (int)mul_gf256(55, 55) << '\n';
-  std::cout << (int)invert_gf256(98) << '\n';
-  std::cout << (int)(mul_gf256(175, 98)) << '\n';
+  test_eval<Mode::G>();
+  test_eval<Mode::E>();
+
+  /* std::uint64_t mask = 0xaaaaaaaaaaaaaaaa; */
+  /* std::bitset<128> onezero = mask; */
+  /* onezero <<= 64; */
+  /* onezero |= mask; */
+  /* const auto zeroone = onezero >> 1; */
+
+  /* std::cout << (int)mul_gf256(55, 55) << '\n'; */
+  /* std::cout << (int)invert_gf256(98) << '\n'; */
+  /* std::cout << (int)(mul_gf256(175, 98)) << '\n'; */
 }

@@ -3,7 +3,9 @@
 
 
 #include "mode.h"
-#include "prf.h"
+#include "gf256.h"
+#include "prg.h"
+
 #include <bitset>
 #include <iostream>
 #include <iomanip>
@@ -34,35 +36,15 @@ inline std::bitset<128> mulgf4(const std::bitset<128>& a, const std::bitset<128>
 template <Mode mode>
 struct Share {
 public:
-  static inline std::bitset<128> delta;
-  static inline std::bitset<128> delta_gf4;
   static inline std::size_t nonce;
   static inline PRF fixed_key;
+  static inline PRG prg;
+
+  static void initialize(std::bitset<128> fixed_key, std::bitset<128> seed);
 
   constexpr Share() { }
   constexpr Share(std::bitset<128> val) : val(val) { }
-  constexpr static Share bit(bool b) {
-    Share out;
-    if constexpr (mode == Mode::E) { out.val = 0; }
-    else {
-      if (b) { out.val = delta; } else { out.val = 0; }
-    }
-    return out;
-  }
-
-  static Share gf4(std::bitset<2> x) {
-    Share out;
-    if constexpr (mode == Mode::E) {
-      out.val = 0;
-    } else {
-      static const auto zo = zeroone();
-      static const auto oz = zo << 1;
-
-      if (x[0]) { out.val ^= mulgf4(delta_gf4, zo); }
-      if (x[1]) { out.val ^= mulgf4(delta_gf4, oz); }
-    }
-    return out;
-  }
+  static Share<mode> bit(bool b);
 
   static Share random();
 
