@@ -21,27 +21,30 @@ void test_eval() {
   std::vector<Share<mode>> fx(2);
   x[0] = Share<mode>::ginput(false);
   x[1] = Share<mode>::ginput(false);
-  x[2] = Share<mode>::ginput(false);
+  x[2] = Share<mode>::ginput(true);
 
 
-  std::vector<std::bitset<128>> f(8);
-  f[0][0] = false;
-  f[0][1] = true;
-  f[0][2] = false;
-  f[0][3] = false;
-  f[0][4] = false;
-  f[0][5] = false;
-  f[0][6] = false;
-  f[0][7] = false;
+  TruthTable f(3, 2);
+  f.set(0, 0, false);
+  f.set(1, 0, true);
+  f.set(2, 0, false);
+  f.set(3, 0, false);
+  f.set(4, 0, false);
+  f.set(5, 0, false);
+  f.set(6, 0, false);
+  f.set(7, 0, false);
 
-  f[0][8] = true;
-  f[0][9] = false;
-  f[0][10] = false;
-  f[0][11] = false;
-  f[0][12] = false;
-  f[0][13] = false;
-  f[0][14] = false;
-  f[0][15] = false;
+  f.set(0, 1, true);
+  f.set(1, 1, false);
+  f.set(2, 1, false);
+  f.set(3, 1, false);
+  f.set(4, 1, false);
+  f.set(5, 1, false);
+  f.set(6, 1, false);
+  f.set(7, 1, false);
+
+
+  std::cout << f << '\n';
 
 
   private_function<mode>(f, x, fx);
@@ -122,8 +125,10 @@ int main() {
   Share<Mode::E>::nonce = 0;
   Share<Mode::E>::fixed_key = Share<Mode::G>::fixed_key;
 
-  test_half_random<Mode::G>();
-  test_half_random<Mode::E>();
+  /* test_half_random<Mode::G>(); */
+  /* test_half_random<Mode::E>(); */
+  test_eval<Mode::G>();
+  test_eval<Mode::E>();
 
 
 /*   for (int i = 0; i < 3; ++i) { */

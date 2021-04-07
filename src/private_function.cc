@@ -20,11 +20,12 @@ void private_function(
   const auto point = privacy_free_point<mode>(sx, std::span { sux });
 
   TruthTable rf(n, m);
-
-  random_function<mode>(sx, sux, rf, sfx);
   if constexpr (mode == Mode::G) {
+    rf = f;
     rf = rf.linear_shuffle(point);
   }
+
+  random_function<mode>(sx, sux, rf, sfx);
 
   if constexpr (mode == Mode::G) {
     rf.send();
