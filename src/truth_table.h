@@ -166,10 +166,9 @@ struct TruthTable {
 
     void send() const;
 
+  private:
     std::size_t n;
     std::size_t m;
-
-  private:
     std::size_t nn;
 
     // the table is stored by column, then by row
