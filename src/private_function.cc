@@ -36,16 +36,6 @@ void private_function(
   std::vector<Share<mode>> sux(1 << n);
   const auto point = privacy_free_point<mode>(sx, std::span { sux });
 
-  std::cout << point << '\n';
-  for (auto p: sux) {
-    std::cout << p;
-    if constexpr (mode == Mode::G) {
-      std::cout << ' ' << (p ^ Share<mode>::constant(true));
-    }
-    std::cout << '\n';
-  }
-  std::cout << '\n';
-
   std::vector<std::bitset<128>> rf;
   const auto sz = ((1 << n)*m + 127)/128;
   if constexpr (mode == Mode::G) {
@@ -56,11 +46,6 @@ void private_function(
   random_function<mode>(point, sx, sux, rf, sfx);
   if constexpr (mode == Mode::G) {
     rearrange_table(n, m, point, f, rf);
-  }
-  if constexpr (mode == Mode::G) {
-    for (std::size_t i = 0; i < (1<<n)*m; ++i) {
-      std::cout << rf[i/128][i%128];
-    } std::cout << '\n';
   }
 
   for (std::size_t i = 0; i < sz; ++i) {
