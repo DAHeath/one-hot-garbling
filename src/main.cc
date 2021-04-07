@@ -1,11 +1,45 @@
 #include "privacy_free_point.h"
+#include "private_function.h"
 #include "prg.h"
 #include <vector>
 #include <iostream>
 
 
 template <Mode mode>
-void test() {
+void test_eval() {
+  std::vector<Share<mode>> x(3);
+  std::vector<Share<mode>> fx(1);
+  x[0] = Share<mode>::ginput(false);
+  x[1] = Share<mode>::ginput(false);
+  x[2] = Share<mode>::ginput(false);
+
+
+  std::vector<std::bitset<128>> f(8);
+  f[0][0] = true;
+  f[0][1] = false;
+  f[0][2] = false;
+  f[0][3] = false;
+  f[0][4] = false;
+  f[0][5] = false;
+  f[0][6] = false;
+  f[0][7] = false;
+
+  private_function<mode>(f, x, fx);
+
+  for (auto p: fx) {
+    std::cout << p;
+    if constexpr (mode == Mode::G) {
+      std::cout << ' ' << (p ^ Share<mode>::constant(true));
+    }
+    std::cout << '\n';
+  }
+  std::cout << '\n';
+
+}
+
+
+template <Mode mode>
+void test_point() {
 
   std::vector<Share<mode>> x(3);
   std::vector<Share<mode>> point(8);
@@ -35,6 +69,6 @@ int main() {
   Share<Mode::E>::nonce = 0;
   Share<Mode::E>::fixed_key = Share<Mode::G>::fixed_key;
 
-  test<Mode::G>();
-  test<Mode::E>();
+  test_eval<Mode::G>();
+  test_eval<Mode::E>();
 }

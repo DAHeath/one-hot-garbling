@@ -66,6 +66,9 @@ public:
     return os;
   }
 
+  const std::bitset<128>& operator*() const { return val; }
+  std::bitset<128>& operator*() { return val; }
+
 private:
   std::bitset<128> val;
 };

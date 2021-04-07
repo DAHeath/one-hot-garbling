@@ -26,8 +26,8 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
     }
   } else {
     out[!point[0].color()] = point[0].H();
-    missing |= point[0].color();
   }
+  missing |= point[0].color();
   ++Share<mode>::nonce;
 
   // Now, iterate over the levels of the tree.
@@ -52,6 +52,8 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
         (evens ^ ((~point[i]).H())).send();
         (odds ^ (point[i].H())).send();
       }
+      const auto bit = point[i].color();
+      missing = (missing << 1) | bit;
     } else {
       const auto g_evens = Share<mode>::recv();
       const auto g_odds = Share<mode>::recv();
@@ -71,8 +73,6 @@ std::size_t privacy_free_point(std::span<const Share<mode>> point, std::span<Sha
       // use the color of the `i`th share to figure out which element is missing at the next level.
       const auto bit = point[i].color();
       missing = (missing << 1) | bit;
-
-      const auto dec = point[i].H() ^ (bit ? g_evens : g_odds);
 
       // assign the sibling of the missing node by (1) decrypting the appropriate row given by
       out[missing ^ 1] = point[i].H() ^ (bit ? (g_evens ^ e_evens) : (g_odds ^ e_odds));

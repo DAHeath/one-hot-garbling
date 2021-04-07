@@ -6,8 +6,12 @@
 #include <span>
 
 
+// Let delta be the color of the input labels
 template <Mode mode>
-std::size_t privacy_free_point(std::span<const Share<mode>>, std::span<Share<mode>>);
+std::size_t // x + delta
+privacy_free_point(
+    std::span<const Share<mode>>, //  [|x|]
+    std::span<Share<mode>>); // [|U(x + delta)|]
 
 
 #endif
