@@ -3,24 +3,24 @@
 
 
 #include "share.h"
+#include "truth_table.h"
 #include <span>
 
 
 template <Mode mode>
 void half_random_function(
     std::size_t i,
-    const Share<mode>& key,
-    std::span<const Share<mode>> unary,
-    std::span<std::bitset<128>> table,
+    std::span<const Share<mode>> sx, // [| x |]
+    std::span<const Share<mode>>, // [| U(x + delta) |]
+    TruthTable&,
     std::span<Share<mode>> out);
 
 
 template <Mode mode>
 void random_function(
-    std::size_t, // E inputs x
     std::span<const Share<mode>>, // [|x|]
     std::span<const Share<mode>>, // [|U(x)|]
-    std::span<std::bitset<128>> table,
+    TruthTable&,
     std::span<Share<mode>> out);
 
 

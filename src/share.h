@@ -29,6 +29,8 @@ public:
 
   static Share bit(bool);
 
+  static Share random();
+
   constexpr Share& operator^=(const Share& o) { val ^= o.val; return *this; }
   constexpr Share operator^(const Share& o) const {
     Share out = *this;
