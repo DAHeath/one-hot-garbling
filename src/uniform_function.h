@@ -29,7 +29,7 @@ void half_uniform_function(
  * The output is XOR stacked into `out`.
  *
  * This is achieved by `n` applications of `half_uniform_function` and by
- * masking each column with a uniform bit.
+ * masking each column of the resultant truth table with a uniform bit.
  */
 template <Mode mode>
 void uniform_function(

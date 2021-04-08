@@ -7,6 +7,11 @@
 #include <span>
 
 
+/**
+ * G inputs a private function `f` described by a truth table and the parties
+ * input a sharing [|x|].
+ * The parties output [|f(x)|].
+ */
 template <Mode mode>
 void private_function(
     const TruthTable&, // G inputs f
