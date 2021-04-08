@@ -9,8 +9,9 @@ void half_uniform_function(
     TruthTable& r,
     std::span<Share<mode>> out) {
 
-  const auto n = sx.size();
-  const auto m = out.size();
+  const auto n = r.n_inp();
+  const auto m = r.n_out();
+  const auto p = out.size(); // number of packs
 
   const auto sxi = sx[ix];
 
@@ -32,25 +33,36 @@ void half_uniform_function(
     const auto prod0 = table0.template apply<mode>(sux);
     const auto prod1 = table1.template apply<mode>(sux);
 
-    for (std::size_t j = 0; j < m; ++j) {
+    // Package the m inner products into p shares.
+    std::vector<Share<mode>> packed_prod0(p);
+    std::vector<Share<mode>> packed_prod1(p);
+    package<mode>(prod0, packed_prod0);
+    package<mode>(prod1, packed_prod1);
+
+    for (std::size_t i = 0; i < p; ++i) {
+      // The last pack may not be full; calculate its size.
       // Now, encrypt the two inner products corresponding to the part of the
       // vector E does not hold.
       // Garbled row reduction technique.
-      const auto X = key0.H() ^ prod1[j];
-      const auto row = key1.H() ^ prod0[j] ^ X;
+      const auto X = key0.H() ^ packed_prod1[i];
+      const auto row = key1.H() ^ packed_prod0[i] ^ X;
       row.send();
       ++Share<mode>::nonce;
-      out[j] ^= prod0[j] ^ prod1[j] ^ X;
+      out[i] ^= packed_prod0[i] ^ packed_prod1[i] ^ X;
     }
   } else {
     // Take inner product of half of truth table
-    (TruthTable::uniform(n, m, *sxi) & (sxi.color() ? mask : ~mask)).apply(sux, out);
+    std::vector<Share<mode>> prod(m);
+    (TruthTable::uniform(n, m, *sxi) & (sxi.color() ? mask : ~mask)).template apply<mode>(sux, prod);
+
+    // Package the m inner products into the p outputs.
+    package<mode>(prod, out);
 
     // Other half of inner product comes by decrypting the proper row
-    for (std::size_t j = 0; j < m; ++j) {
+    for (std::size_t i = 0; i < p; ++i) {
       const auto row = Share<mode>::recv();
-      out[j] ^= sxi.H();
-      if (sxi.color()) { out[j] ^= row; }
+      out[i] ^= sxi.H();
+      if (sxi.color()) { out[i] ^= row; }
       ++Share<mode>::nonce;
     }
   }
@@ -64,20 +76,24 @@ void uniform_function(
     TruthTable& r,
     std::span<Share<mode>> out) {
 
-  const auto n = sx.size();
-  const auto m = out.size();
+  const auto n = r.n_inp();
+  const auto m = r.n_out();
 
   for (std::size_t i = 0; i < n; ++i) {
     half_uniform_function(i, sx, sux, r, out);
   }
 
+  std::vector<Share<mode>> masks(m);
   for (std::size_t j = 0; j < m; ++j) {
     const auto s = Share<mode>::uniform();
-    out[j] ^= s;
+    masks[j] = s;
     if (s.color()) {
       r.flip_column(j);
     }
   }
+
+  // Pack the m random masks on top of the p shares.
+  package<mode>(masks, out);
 }
 
 template void half_uniform_function<Mode::G>(

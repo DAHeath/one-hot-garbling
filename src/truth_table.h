@@ -184,6 +184,9 @@ struct TruthTable {
     void send() const;
     static TruthTable recv(std::size_t n, std::size_t m);
 
+    constexpr std::size_t n_inp() const { return n; }
+    constexpr std::size_t n_out() const { return m; }
+
   private:
     std::size_t n;
     std::size_t m;

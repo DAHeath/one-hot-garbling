@@ -56,6 +56,11 @@ std::size_t ptr = 0;
 std::vector<std::bitset<128>> messages;
 
 
+std::size_t n_ciphertexts() {
+  return messages.size();
+}
+
+
 template<> void Share<Mode::G>::send() const {
   messages.push_back(val);
 }
@@ -110,7 +115,7 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
   const auto n = out.size();
   if (n == 1) {
     // Base case: the word contains exactly one bit.
-    out[0] = *this;
+    out[0] ^= *this;
   } else {
     // In the general case, split the word into its low bits and its high bits
     // (using garbled rows) and then recursively unpack the two halves.

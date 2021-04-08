@@ -10,31 +10,39 @@
 
 template <Mode mode>
 void test_eval() {
-  std::vector<Share<mode>> x(3);
-  std::vector<Share<mode>> fx(2);
+  std::vector<Share<mode>> x(8);
+  std::vector<Share<mode>> packed_fx(3);
   x[0] = Share<mode>::ginput(false);
   x[1] = Share<mode>::ginput(false);
   x[2] = Share<mode>::ginput(false);
+  x[3] = Share<mode>::ginput(false);
+  x[4] = Share<mode>::ginput(false);
+  x[5] = Share<mode>::ginput(false);
+  x[6] = Share<mode>::ginput(false);
+  x[7] = Share<mode>::ginput(false);
 
-
-  TruthTable f(3, 2);
+  TruthTable f(8, 8);
   f.set(1, 0, true);
   f.set(0, 1, true);
 
+  /* std::cout << f << '\n'; */
 
-  std::cout << f << '\n';
 
+  private_function<mode>(f, x, packed_fx);
 
-  private_function<mode>(f, x, fx);
+  std::vector<Share<mode>> fx(8);
+  unpackage<mode>(packed_fx, fx);
 
-  for (auto p: fx) {
-    std::cout << p;
-    if constexpr (mode == Mode::G) {
-      std::cout << ' ' << (p ^ Share<mode>::bit(true));
-    }
-    std::cout << '\n';
-  }
-  std::cout << '\n';
+  /* for (auto p: fx) { */
+  /*   std::cout << p; */
+  /*   if constexpr (mode == Mode::G) { */
+  /*     std::cout << ' ' << (p ^ Share<mode>::bit(true)); */
+  /*   } */
+  /*   std::cout << '\n'; */
+  /* } */
+  /* std::cout << '\n'; */
+
+  std::cout << std::dec << (n_ciphertexts() - 8) << "\n";
 
 }
 
@@ -106,11 +114,11 @@ int main() {
   /* } */
   /* std::cout << '\n'; */
 
-  test_pack<Mode::G>();
-  test_pack<Mode::E>();
+  /* test_pack<Mode::G>(); */
+  /* test_pack<Mode::E>(); */
 
-  /* test_eval<Mode::G>(); */
-  /* test_eval<Mode::E>(); */
+  test_eval<Mode::G>();
+  test_eval<Mode::E>();
 
   /* std::uint64_t mask = 0xaaaaaaaaaaaaaaaa; */
   /* std::bitset<128> onezero = mask; */

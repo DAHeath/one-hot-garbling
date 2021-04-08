@@ -12,6 +12,9 @@
 #include <iomanip>
 
 
+std::size_t n_ciphertexts();
+
+
 template <Mode mode>
 struct Share {
 public:
@@ -106,6 +109,28 @@ public:
 private:
   std::bitset<128> val;
 };
+
+
+template <Mode mode>
+void package(std::span<const Share<mode>> to_pack, std::span<Share<mode>> out) {
+  const auto n = to_pack.size();
+  const auto m = out.size();
+  const auto p = (n + m - 1) / m;
+  for (std::size_t i = 0; i < m; ++i) {
+    out[i] ^= Share<mode>::pack(to_pack.subspan(i*p, p));
+  }
+}
+
+
+template <Mode mode>
+void unpackage(std::span<const Share<mode>> to_unpack, std::span<Share<mode>> out) {
+  const auto n = to_unpack.size();
+  const auto m = out.size();
+  const auto p = (m + n - 1) / n;
+  for (std::size_t i = 0; i < n; ++i) {
+    to_unpack[i].unpack(out.subspan(i*p, p));
+  }
+}
 
 
 #endif
