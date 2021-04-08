@@ -1,6 +1,6 @@
 #include "private_function.h"
 #include "privacy_free_point.h"
-#include "random_function.h"
+#include "uniform_function.h"
 #include "util.h"
 
 #include <vector>
@@ -25,7 +25,7 @@ void private_function(
     rf = rf.linear_shuffle(point);
   }
 
-  random_function<mode>(sx, sux, rf, sfx);
+  uniform_function<mode>(sx, sux, rf, sfx);
 
   if constexpr (mode == Mode::G) {
     rf.send();

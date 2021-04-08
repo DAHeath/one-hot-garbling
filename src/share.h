@@ -24,7 +24,8 @@ public:
   constexpr Share(std::bitset<128> val) : val(val) { }
   static Share<mode> bit(bool b);
 
-  static Share random();
+  // G selects a uniform input. E does not learn the input.
+  static Share uniform();
 
   constexpr Share& operator^=(const Share& o) { val ^= o.val; return *this; }
   constexpr Share operator^(const Share& o) const {
@@ -38,6 +39,7 @@ public:
   }
 
   // Pack up to 8 bits into a single label.
+  // Packing is homomorphic.
   static Share pack(std::span<const Share> args) {
     assert(args.size() <= 8 && args.size() > 0);
 
@@ -48,11 +50,11 @@ public:
     return out;
   }
 
-
+  // Unpack a packed label into individual bits.
+  // For a label that packs n bits, `unpack` consumes O(2^n) garbled rows.
   void unpack(std::span<Share> out) const;
 
-
-  // Scale each byte of the label using multiplication in GF(256).
+  // Scale each byte of the label by a public scalar using multiplication in GF(256).
   Share scale(std::uint8_t scalar) const {
     Share scaled;
     std::uint8_t inp[16];

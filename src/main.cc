@@ -1,6 +1,5 @@
 #include "privacy_free_point.h"
 #include "private_function.h"
-#include "random_function.h"
 #include "prg.h"
 #include <vector>
 #include <iostream>

@@ -78,13 +78,13 @@ template<> Share<Mode::E> Share<Mode::E>::ginput(bool b) {
 }
 
 
-template<> Share<Mode::G> Share<Mode::G>::random() {
+template<> Share<Mode::G> Share<Mode::G>::uniform() {
   const auto b = prg()[0];
   return Share<Mode::G>::bit(b);
 }
 
 
-template<> Share<Mode::E> Share<Mode::E>::random() {
+template<> Share<Mode::E> Share<Mode::E>::uniform() {
   return Share<Mode::E>::bit(false);
 }
 
@@ -109,22 +109,22 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
 
   const auto n = out.size();
   if (n == 1) {
+    // Base case: the word contains exactly one bit.
     out[0] = *this;
   } else {
-
-    std::cout << n << '\n';
-
+    // In the general case, split the word into its low bits and its high bits
+    // (using garbled rows) and then recursively unpack the two halves.
     const auto half = (n+1)/2;
 
     const std::size_t mask = (1 << n) - 1;
     const std::size_t half_mask = (1 << half) - 1;
     const auto col = color256() & mask;
 
-    std::cout << col << '\n';
-
     Share<mode> low;
-
     if constexpr (mode == Mode::G) {
+      // G constructs 2^n-1 garbled rows such that each row encrypts the low
+      // bits corresponding to the current word.
+      // We use color to permute the rows, as is typical.
       const auto lastrow = col ^ mask;
       const auto X = ((*this) ^ deltas[lastrow]).H() ^ deltas[lastrow & half_mask];
 
@@ -136,17 +136,22 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
 
       low = X;
     } else {
-      std::vector<Share<Mode::E>> rows((1 << n) - 1);
-      for (auto& row: rows) {
-        row = Share<Mode::E>::recv();
+      std::vector<Share<Mode::E>> rows(1 << n);
+      for (std::size_t i = 0; i < ((1 << n) - 1); ++i) {
+        rows[i] = Share<Mode::E>::recv();
       }
-      low = (*this).H() ^ (col == ((1 << n) - 1) ? Share<Mode::E>(0) : rows[col]);
+      rows[(1 << n) - 1] = Share<Mode::E>::bit(false); // By GRR, last row is 0.
+      low = (*this).H() ^ rows[col];
     }
     ++Share<mode>::nonce;
+    // High bits can be computed by subtracting off low bits.
+    // Now with the high bits in a separate word, we move the high bits to the
+    // low bits by scaling by the appropriate magic number.
     const auto high = ((*this) ^ low).scale(magic[n]);
+
+    // Recursively unpack the two words.
     auto out0 = out.subspan(0, half);
     auto out1 = out.subspan(half);
-
     low.unpack(out0);
     high.unpack(out1);
   }

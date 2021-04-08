@@ -39,9 +39,9 @@ struct TruthTable {
     }
 
     /**
-     * Construct a random n input m output truth table from a PRG.
+     * Construct a uniform n input m output truth table from a PRG.
      */
-    static TruthTable random(std::size_t n, std::size_t m, const std::bitset<128>& seed) {
+    static TruthTable uniform(std::size_t n, std::size_t m, const std::bitset<128>& seed) {
       PRG g(seed);
       TruthTable tt(n, m);
       const std::size_t slices = (tt.val.size() + 15) / 16;

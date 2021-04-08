@@ -1,8 +1,8 @@
-#include "random_function.h"
+#include "uniform_function.h"
 
 
 template <Mode mode>
-void half_random_function(
+void half_uniform_function(
     std::size_t ix,
     std::span<const Share<mode>> sx,
     std::span<const Share<mode>> sux,
@@ -24,8 +24,8 @@ void half_random_function(
     const auto key1 = key0 ^ one;
 
     // Set up two halves of truth table according to possible labels of [|x_i|].
-    const auto table0 = TruthTable::random(n, m, *key0) & ~mask;
-    const auto table1 = TruthTable::random(n, m, *key1) & mask;
+    const auto table0 = TruthTable::uniform(n, m, *key0) & ~mask;
+    const auto table1 = TruthTable::uniform(n, m, *key1) & mask;
     r ^= table0 ^ table1;
 
     // Compute two possible half inner products.
@@ -44,7 +44,7 @@ void half_random_function(
     }
   } else {
     // Take inner product of half of truth table
-    (TruthTable::random(n, m, *sxi) & (sxi.color() ? mask : ~mask)).apply(sux, out);
+    (TruthTable::uniform(n, m, *sxi) & (sxi.color() ? mask : ~mask)).apply(sux, out);
 
     // Other half of inner product comes by decrypting the proper row
     for (std::size_t j = 0; j < m; ++j) {
@@ -58,7 +58,7 @@ void half_random_function(
 
 
 template <Mode mode>
-void random_function(
+void uniform_function(
     std::span<const Share<mode>> sx, // [|x|]
     std::span<const Share<mode>> sux, // [|U(x)|]
     TruthTable& r,
@@ -68,11 +68,11 @@ void random_function(
   const auto m = out.size();
 
   for (std::size_t i = 0; i < n; ++i) {
-    half_random_function(i, sx, sux, r, out);
+    half_uniform_function(i, sx, sux, r, out);
   }
 
   for (std::size_t j = 0; j < m; ++j) {
-    const auto s = Share<mode>::random();
+    const auto s = Share<mode>::uniform();
     out[j] ^= s;
     if (s.color()) {
       r.flip_column(j);
@@ -80,25 +80,25 @@ void random_function(
   }
 }
 
-template void half_random_function<Mode::G>(
+template void half_uniform_function<Mode::G>(
     std::size_t,
     std::span<const Share<Mode::G>>,
     std::span<const Share<Mode::G>>,
     TruthTable&,
     std::span<Share<Mode::G>>);
-template void half_random_function<Mode::E>(
+template void half_uniform_function<Mode::E>(
     std::size_t,
     std::span<const Share<Mode::E>>,
     std::span<const Share<Mode::E>>,
     TruthTable&,
     std::span<Share<Mode::E>>);
 
-template void random_function<Mode::G>(
+template void uniform_function<Mode::G>(
     std::span<const Share<Mode::G>>,
     std::span<const Share<Mode::G>>,
     TruthTable&,
     std::span<Share<Mode::G>>);
-template void random_function<Mode::E>(
+template void uniform_function<Mode::E>(
     std::span<const Share<Mode::E>>,
     std::span<const Share<Mode::E>>,
     TruthTable&,
