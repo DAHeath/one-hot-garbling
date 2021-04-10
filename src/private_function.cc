@@ -15,12 +15,8 @@ void private_function(
   const auto n = f.n_inp();
   const auto m = f.n_out();
 
-  std::cout << "AFTER POINT: " << std::dec << n_ciphertexts() << "\n";
-
   std::vector<Share<mode>> sux(1 << n);
   const auto point = privacy_free_point<mode>(sx, std::span { sux });
-
-  std::cout << "AFTER POINT: " << std::dec << n_ciphertexts() << "\n";
 
   TruthTable rf(n, m);
   if constexpr (mode == Mode::G) {

@@ -9,6 +9,8 @@
 #include <iostream>
 
 
+std::size_t n_table_ciphertexts();
+
 /**
  * Truth table representation.
  * Truth tables support arithmetic bitwise manipulations.
@@ -81,8 +83,7 @@ struct TruthTable {
     /**
      * Construct a uniform n input m output truth table from a PRG.
      */
-    static TruthTable uniform(std::size_t n, std::size_t m, const std::bitset<128>& seed) {
-      PRG g(seed);
+    static TruthTable uniform(std::size_t n, std::size_t m, PRG& g) {
       TruthTable tt(n, m);
       const std::size_t slices = (tt.val.size() + 15) / 16;
       for (std::size_t i = 0; i < slices-1; ++i) {

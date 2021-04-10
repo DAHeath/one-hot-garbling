@@ -25,8 +25,12 @@ void half_uniform_function(
     const auto key1 = key0 ^ one;
 
     // Set up two halves of truth table according to possible labels of [|x_i|].
-    const auto table0 = TruthTable::uniform(n, m, *key0) & ~mask;
-    const auto table1 = TruthTable::uniform(n, m, *key1) & mask;
+
+    PRG g0 = *key0;
+    PRG g1 = *key1;
+
+    const auto table0 = TruthTable::uniform(n, m, g0) & ~mask;
+    const auto table1 = TruthTable::uniform(n, m, g1) & mask;
     r ^= table0 ^ table1;
 
     // Compute two possible half inner products.
@@ -53,7 +57,8 @@ void half_uniform_function(
   } else {
     // Take inner product of half of truth table
     std::vector<Share<mode>> prod(m);
-    (TruthTable::uniform(n, m, *sxi) & (sxi.color() ? mask : ~mask)).template apply<mode>(sux, prod);
+    PRG g = *sxi;
+    (TruthTable::uniform(n, m, g) & (sxi.color() ? mask : ~mask)).template apply<mode>(sux, prod);
 
     // Package the m inner products into the p outputs.
     package<mode>(prod, out);

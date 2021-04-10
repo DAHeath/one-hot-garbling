@@ -96,23 +96,9 @@ template<> Share<Mode::E> Share<Mode::E>::uniform() {
 
 template <Mode mode>
 void Share<mode>::unpack(std::span<Share<mode>> out) const {
-  // Every field element of form abcd0000 maps to an element of form
-  // 0000wxyz when multiplied by 116.
-  constexpr static std::uint8_t magic8 = 116;
-  // Every field element of form 00abc000 maps to an element of form
-  // 00000xyz when multiplied by 232.
-  constexpr static std::uint8_t magic6 = 232;
-  // Every field element of form 0000ab00 maps to an element of form
-  // 000000xy when multiplied by 203.
-  constexpr static std::uint8_t magic4 = 203;
-  // Every field element of form 000000a0 maps to an element of form
-  // 0000000x when multiplied by 141.
-  constexpr static std::uint8_t magic2 = 141;
-
-  constexpr static std::uint8_t magic[9] =
-    { 0, 1, magic2, magic4, magic4, magic6, magic6, magic8, magic8 };
-
   const auto n = out.size();
+
+
   if (n == 1) {
     // Base case: the word contains exactly one bit.
     out[0] ^= *this;
@@ -152,7 +138,8 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
     // High bits can be computed by subtracting off low bits.
     // Now with the high bits in a separate word, we move the high bits to the
     // low bits by scaling by the appropriate magic number.
-    const auto high = ((*this) ^ low).scale(magic[n]);
+    const auto magic = invert_gf256(1 << (n/2));
+    const auto high = ((*this) ^ low).scale(magic);
 
     // Recursively unpack the two words.
     auto out0 = out.subspan(0, half);
