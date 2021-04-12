@@ -59,29 +59,73 @@ void test_eval() {
 /*   } */
 /*   std::cout << '\n'; */
 
-/*   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n"; */
 /* } */
 
 template <Mode mode>
-void test_matrix() {
+ShareMatrix<mode> test_matrix() {
 
-  const auto m = ShareMatrix<mode>::uniform(3, 2);
+  auto x = ShareMatrix<mode>::vector(10);
+  auto y = ShareMatrix<mode>::vector(10);
 
-  std::cout << m << '\n';
-  std::cout << m.color() << '\n';
+  x[0] = Share<mode>::ginput(true);
+  /* x[1] = Share<mode>::ginput(true); */
+  /* x[2] = Share<mode>::ginput(false); */
+  /* x[3] = Share<mode>::ginput(true); */
+
+  /* y[0] = Share<mode>::ginput(false); */
+  y[1] = Share<mode>::ginput(true);
+  /* y[2] = Share<mode>::ginput(false); */
+
+  /* const auto xy = x.unary_outer_product(y); */
+  return outer_product<mode>(x, y);
+
+  /* std::cout << x.color().outer_product(y.color()) << "\n"; */
+
+  /* return ShareMatrix<mode>::constant(x.color().outer_product(y.color())); */
+
+  /* return xy; */
+}
+
+
+Matrix decode(const ShareMatrix<Mode::G>& g, const ShareMatrix<Mode::E>& e) {
+  const auto n = g.rows();
+  const auto m = g.cols();
+
+  Matrix out(n, m);
+  for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t j = 0; j < m; ++j) {
+      if (((*g(i, j)) ^ (*e(i, j))) == 0) {
+        out(i, j) = 0;
+      } else if ((*g(i, j) ^ *(e(i, j))) == Share<Mode::G>::delta()) {
+        out(i, j) = 1;
+      } else {
+        std::cerr << "ERROR: BAD LABEL!\n";
+        std::cerr << *g(i, j) << '\n';
+        std::cerr << *e(i, j) << '\n';
+        std::cerr << Share<Mode::G>::delta() << '\n';
+        std::exit(1);
+      }
+    }
+  }
+  return out;
 }
 
 
 int main() {
-  PRG g;
-  const auto key = g();
-  const auto seed = g();
+  PRG prg;
+  const auto key = prg();
+  const auto seed = prg();
 
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
-  test_matrix<Mode::G>();
-  test_matrix<Mode::E>();
+  const auto g = test_matrix<Mode::G>();
+  const auto e = test_matrix<Mode::E>();
+
+  std::cout << decode(g, e) << '\n';
+  std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
+
+  /* std::cout << identity_table(3) << '\n'; */
 
   /* test_eval<Mode::G>(); */
   /* test_eval<Mode::E>(); */

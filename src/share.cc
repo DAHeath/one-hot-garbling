@@ -8,6 +8,8 @@ std::vector<Share<Mode::G>> deltas;
 
 PRG prg;
 
+template<>
+std::bitset<128> Share<Mode::G>::delta() { return *deltas[1]; }
 
 
 template<> void Share<Mode::G>::initialize(std::bitset<128> fixed_key, std::bitset<128> seed) {

@@ -22,6 +22,7 @@ public:
   static inline PRF fixed_key;
 
   static void initialize(std::bitset<128> fixed_key, std::bitset<128> seed);
+  static std::bitset<128> delta();
 
   constexpr Share() { }
   constexpr Share(std::bitset<128> val) : val(val) { }

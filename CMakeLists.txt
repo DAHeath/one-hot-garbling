@@ -6,7 +6,8 @@ set(CMAKE_BUILD_TYPE Release)
 add_definitions(-Wfatal-errors)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "-pthread -Wall -march=native -O3 -maes -mrdseed -DNDEBUG")
+# set(CMAKE_CXX_FLAGS "-pthread -Wall -march=native -O3 -maes -mrdseed -DNDEBUG")
+set(CMAKE_CXX_FLAGS "-pthread -Wall -march=native -O3 -maes -mrdseed")
 
 if (APPLE)
   set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
