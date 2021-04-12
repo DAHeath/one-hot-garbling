@@ -40,6 +40,24 @@ public:
     return { n, 1 };
   }
 
+  // Column vector containing the `i`th row.
+  ShareMatrix<mode> row(std::size_t i) const {
+    auto out = ShareMatrix<mode>::vector(cols());
+    for (std::size_t j = 0; j < cols(); ++j) {
+      out[j] = (*this)(i, j);
+    }
+    return out;
+  }
+
+  // Column vector containing the `j`th column.
+  ShareMatrix<mode> column(std::size_t j) const {
+    auto out = ShareMatrix<mode>::vector(rows());
+    for (std::size_t i = 0; i < rows(); ++i) {
+      out[i] = (*this)(i, j);
+    }
+    return out;
+  }
+
   Share<mode>& operator()(std::size_t i, std::size_t j) {
     if (transposed) { return get(j, i); } else { return get(i, j); }
   }
@@ -109,6 +127,8 @@ public:
   // This computes [|U(a + c) x b |] where x denotes the vector outer product.
   ShareMatrix<mode> unary_outer_product(const ShareMatrix<mode>&) const;
 
+  ShareMatrix<mode> operator*(const ShareMatrix<mode>&) const;
+
 private:
   Share<mode>& get(std::size_t i, std::size_t j) {
     return vals[j*n + i];
@@ -130,7 +150,7 @@ ShareMatrix<mode> operator*(const Matrix& x, const ShareMatrix<mode>& y) {
   const auto l = x.rows();
   const auto n = y.rows();
   const auto m = y.cols();
-  assert (y.cols() == n);
+  assert (x.cols() == n);
 
   ShareMatrix<mode> out(l, m);
   for (std::size_t i = 0; i < l; ++i) {

@@ -64,20 +64,13 @@ void test_eval() {
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
 
-  auto x = ShareMatrix<mode>::vector(10);
-  auto y = ShareMatrix<mode>::vector(10);
+  /* auto x = ShareMatrix<mode>::vector(8); */
+  /* auto y = ShareMatrix<mode>::vector(8); */
+  auto x = ShareMatrix<mode>(12, 12);
+  auto y = ShareMatrix<mode>(12, 12);
 
-  x[0] = Share<mode>::ginput(true);
-  /* x[1] = Share<mode>::ginput(true); */
-  /* x[2] = Share<mode>::ginput(false); */
-  /* x[3] = Share<mode>::ginput(true); */
-
-  /* y[0] = Share<mode>::ginput(false); */
-  y[1] = Share<mode>::ginput(true);
-  /* y[2] = Share<mode>::ginput(false); */
-
-  /* const auto xy = x.unary_outer_product(y); */
-  return outer_product<mode>(x, y);
+  return x * y;
+  /* return outer_product<mode>(x, y); */
 
   /* std::cout << x.color().outer_product(y.color()) << "\n"; */
 

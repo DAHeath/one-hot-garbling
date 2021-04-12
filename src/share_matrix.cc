@@ -149,3 +149,22 @@ ShareMatrix<mode> outer_product(const ShareMatrix<mode>& x, const ShareMatrix<mo
 
 template ShareMatrix<Mode::G> outer_product(const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
 template ShareMatrix<Mode::E> outer_product(const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
+
+
+template <Mode mode>
+ShareMatrix<mode> ShareMatrix<mode>::operator*(const ShareMatrix<mode>& o) const {
+  const auto l = rows();
+  const auto n = o.rows();
+  const auto m = o.cols();
+  assert (cols() == n);
+
+  ShareMatrix<mode> out(l, m);
+  for (std::size_t i = 0; i < n; ++i) {
+    out ^= outer_product(column(i), o.row(i));
+  }
+  return out;
+}
+
+
+template ShareMatrix<Mode::G> ShareMatrix<Mode::G>::operator*(const ShareMatrix<Mode::G>&) const;
+template ShareMatrix<Mode::E> ShareMatrix<Mode::E>::operator*(const ShareMatrix<Mode::E>&) const;
