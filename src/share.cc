@@ -97,8 +97,6 @@ template<> Share<Mode::E> Share<Mode::E>::uniform() {
 template <Mode mode>
 void Share<mode>::unpack(std::span<Share<mode>> out) const {
   const auto n = out.size();
-
-
   if (n == 1) {
     // Base case: the word contains exactly one bit.
     out[0] ^= *this;
@@ -151,4 +149,3 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
 
 template void Share<Mode::G>::unpack(std::span<Share<Mode::G>>) const;
 template void Share<Mode::E>::unpack(std::span<Share<Mode::E>>) const;
-

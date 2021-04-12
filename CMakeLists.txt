@@ -12,10 +12,11 @@ if (APPLE)
   set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
 endif()
 find_package(OpenSSL REQUIRED)
+find_package(Boost REQUIRED)
 
 file(GLOB sources "src/*.cc")
 
 add_executable(GarbledPoints ${sources})
-target_include_directories(GarbledPoints PUBLIC src ${OPENSSL_INCLUDE_DIR} emp-ot/src)
+target_include_directories(GarbledPoints PUBLIC src ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} emp-ot/src)
 target_link_libraries(GarbledPoints ${OPENSSL_LIBRARIES})
 

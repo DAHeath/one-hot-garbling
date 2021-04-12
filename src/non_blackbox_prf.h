@@ -11,8 +11,8 @@ template <Mode mode>
 struct NonBlackboxPRF {
 public:
   NonBlackboxPRF(
-      std::size_t n, std::size_t m, std::size_t n_layers, std::vector<TruthTable> tables)
-    : n(n), m(m), n_layers(n_layers), tables(std::move(tables)) { }
+      std::size_t n, std::size_t m, const std::vector<TruthTable>& tables)
+    : n(n), m(m), tables(tables) { }
 
   static NonBlackboxPRF from_seed(std::size_t n, std::size_t m, PRG&);
 
@@ -21,7 +21,6 @@ public:
 private:
   std::size_t n;
   std::size_t m;
-  std::size_t n_layers;
 
   std::vector<TruthTable> tables;
 };
