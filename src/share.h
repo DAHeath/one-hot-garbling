@@ -38,6 +38,13 @@ public:
     return out;
   }
 
+  Share& operator&=(const Share&);
+  Share operator&(const Share& o) const {
+    Share out = *this;
+    out &= o;
+    return out;
+  }
+
   constexpr Share operator~() const {
     return (*this) ^ bit(true);
   }

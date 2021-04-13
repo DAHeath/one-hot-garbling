@@ -151,3 +151,53 @@ void Share<mode>::unpack(std::span<Share<mode>> out) const {
 
 template void Share<Mode::G>::unpack(std::span<Share<Mode::G>>) const;
 template void Share<Mode::E>::unpack(std::span<Share<Mode::E>>) const;
+
+
+template<> Share<Mode::E>& Share<Mode::E>::operator&=(const Share<Mode::E>& o) {
+  const auto A = *this;
+  const auto B = o;
+
+  const auto a = A.color();
+  const auto b = B.color();
+
+  const auto zero = Share<Mode::E>::bit(0);
+
+  // E gate
+  const auto e_row = Share<Mode::E>::recv();
+  const auto X = A.H() ^ (a ? (e_row ^ B) : zero);
+  ++Share<Mode::E>::nonce;
+
+  // G gate
+  const auto g_row = Share<Mode::E>::recv();
+  const auto Y = B.H() ^ (b ? g_row : zero);
+  ++Share<Mode::E>::nonce;
+
+  *this = X ^ Y;
+  return *this;
+}
+
+template<> Share<Mode::G>& Share<Mode::G>::operator&=(const Share<Mode::G>& o) {
+  const auto A = *this;
+  const auto B = o;
+
+  const auto a = A.color();
+  const auto b = B.color();
+
+  const auto zero = Share<Mode::G>::bit(0);
+  const auto one = Share<Mode::G>::bit(1);
+
+  // E gate
+  const auto X = (A ^ (a ? one : zero)).H();
+  const auto e_row = (A ^ (a ? zero : one)).H() ^ X ^ B;
+  ++Share<Mode::G>::nonce;
+  e_row.send();
+
+  // G gate
+  const auto Y = (B ^ (b ? one : zero)).H() ^ ((a && b) ? one : zero);
+  const auto g_row = (B ^ (b ? zero : one)).H() ^ Y ^ ((a && !b) ? one : zero);
+  ++Share<Mode::G>::nonce;
+  g_row.send();
+
+  *this = X ^ Y;
+  return *this;
+}

@@ -34,49 +34,20 @@ void test_eval() {
   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
 }
 
-
-/* template <Mode mode> */
-/* void test_eval() { */
-/*   constexpr std::size_t n = 4; */
-/*   constexpr std::size_t m = 128; */
-/*   constexpr std::size_t pack_factor = 2; */
-/*   constexpr std::size_t p = (m + pack_factor - 1) / pack_factor; */
-
-/*   PRG g; */
-/*   const auto f = NonBlackboxPRF<mode>::from_seed(n, m, g); */
-
-/*   std::vector<Share<mode>> x(n); */
-/*   std::vector<Share<mode>> y(m); */
-
-/*   f(x, y); */
-
-/*   for (auto p: y) { */
-/*     std::cout << p; */
-/*     if constexpr (mode == Mode::G) { */
-/*       std::cout << ' ' << (p ^ Share<mode>::bit(true)); */
-/*     } */
-/*     std::cout << '\n'; */
-/*   } */
-/*   std::cout << '\n'; */
-
-/* } */
-
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
 
-  /* auto x = ShareMatrix<mode>::vector(8); */
-  /* auto y = ShareMatrix<mode>::vector(8); */
-  auto x = ShareMatrix<mode>(12, 12);
-  auto y = ShareMatrix<mode>(12, 12);
+  const auto x = Share<mode>::ginput(true);
+  const auto y = Share<mode>::ginput(true);
 
-  return x * y;
-  /* return outer_product<mode>(x, y); */
+  ShareMatrix<mode> m(1, 1);
+  m(0, 0) = x & y;
+  return m;
 
-  /* std::cout << x.color().outer_product(y.color()) << "\n"; */
+  /* auto x = ShareMatrix<mode>(12, 12); */
+  /* auto y = ShareMatrix<mode>(12, 12); */
 
-  /* return ShareMatrix<mode>::constant(x.color().outer_product(y.color())); */
-
-  /* return xy; */
+  /* return x * y; */
 }
 
 
