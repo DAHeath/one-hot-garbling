@@ -114,6 +114,24 @@ public:
     return os;
   }
 
+  // Column vector containing the `i`th row.
+  Matrix row(std::size_t i) const {
+    auto out = Matrix::vector(cols());
+    for (std::size_t j = 0; j < cols(); ++j) {
+      out[j] = (*this)(i, j);
+    }
+    return out;
+  }
+
+  // Column vector containing the `j`th column.
+  Matrix column(std::size_t j) const {
+    auto out = Matrix::vector(rows());
+    for (std::size_t i = 0; i < rows(); ++i) {
+      out[i] = (*this)(i, j);
+    }
+    return out;
+  }
+
 private:
   bool transposed;
   std::size_t n;

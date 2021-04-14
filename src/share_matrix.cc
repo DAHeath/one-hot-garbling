@@ -126,25 +126,31 @@ template ShareMatrix<Mode::E>
 ShareMatrix<Mode::E>::unary_outer_product(const ShareMatrix<Mode::E>&) const;
 
 
-
 template <Mode mode>
-ShareMatrix<mode> outer_product(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+ShareMatrix<mode> half_outer_product(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
 
   auto id_n = identity_table(x.rows());
-  auto id_m = identity_table(y.rows());
+  return id_n * x.unary_outer_product(y);
+}
 
-  const auto uxy = id_n * x.unary_outer_product(y);
-  const auto xcolor = ShareMatrix<mode>::constant(x.color());
+template ShareMatrix<Mode::G> half_outer_product(const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
+template ShareMatrix<Mode::E> half_outer_product(const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
 
-  auto uyxcolor = id_m * y.unary_outer_product(xcolor);
-  uyxcolor.transpose();
-  const auto uxcolorycolor =
-    ShareMatrix<mode>::constant(
-        x.color().outer_product(y.color()));
 
-  return uxy ^ uyxcolor ^ uxcolorycolor;
+template <Mode mode>
+ShareMatrix<mode> outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mode>& Y) {
+  assert(X.cols() == 1);
+  assert(Y.cols() == 1);
+
+  const auto x = ShareMatrix<mode>::constant(X.color());
+  const auto xy = ShareMatrix<mode>::constant(X.color().outer_product(Y.color()));
+
+  return
+    half_outer_product<mode>(X, Y) ^
+    half_outer_product<mode>(Y, x).transposed() ^
+    xy;
 }
 
 template ShareMatrix<Mode::G> outer_product(const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);

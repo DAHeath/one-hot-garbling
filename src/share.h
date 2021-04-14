@@ -88,6 +88,11 @@ public:
 
   void send() const;
   static Share recv();
+  
+
+  // G reveals the value to E.
+  // After this call, the color will return the semantic value.
+  void reveal();
 
   static Share ginput(bool);
 

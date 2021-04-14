@@ -73,6 +73,24 @@ template<> Share<Mode::E> Share<Mode::E>::recv() {
 }
 
 
+std::size_t reveal_ptr = 0;
+std::vector<bool> revelations;
+
+template<Mode mode>
+void Share<mode>::reveal() {
+  if constexpr (mode == Mode::G) {
+    revelations.push_back(color());
+    val[0] = 0;
+  } else {
+    val[0] = val[0] ^ revelations[reveal_ptr++];
+  }
+}
+
+template void Share<Mode::G>::reveal();
+template void Share<Mode::E>::reveal();
+
+
+
 template<> Share<Mode::G> Share<Mode::G>::ginput(bool b) {
   const auto out = prg();
   (Share<Mode::G>::bit(b) ^ out).send();

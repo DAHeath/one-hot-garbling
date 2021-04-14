@@ -12,7 +12,7 @@ struct ShareMatrix {
 public:
   ShareMatrix() { }
   ShareMatrix(std::size_t n, std::size_t m) :
-    transposed(false), n(n), m(m), vals(n*m) { }
+    t(false), n(n), m(m), vals(n*m) { }
 
   static ShareMatrix uniform(std::size_t n, std::size_t m) {
     ShareMatrix out(n, m);
@@ -59,11 +59,11 @@ public:
   }
 
   Share<mode>& operator()(std::size_t i, std::size_t j) {
-    if (transposed) { return get(j, i); } else { return get(i, j); }
+    if (t) { return get(j, i); } else { return get(i, j); }
   }
 
   const Share<mode>& operator()(std::size_t i, std::size_t j) const {
-    if (transposed) { return get(j, i); } else { return get(i, j); }
+    if (t) { return get(j, i); } else { return get(i, j); }
   }
 
   // vector access
@@ -96,10 +96,16 @@ public:
     return out;
   }
 
-  void transpose() { transposed = !transposed; }
+  void transpose() { t = !t; }
 
-  const std::size_t rows() const { return transposed ? m : n; }
-  const std::size_t cols() const { return transposed ? n : m; }
+  ShareMatrix transposed() const {
+    ShareMatrix out = *this;
+    out.transpose();
+    return out;
+  }
+
+  const std::size_t rows() const { return t ? m : n; }
+  const std::size_t cols() const { return t ? n : m; }
 
   friend std::ostream& operator<<(std::ostream& os, const ShareMatrix& m) {
     for (std::size_t i = 0; i < m.rows(); ++i) {
@@ -129,6 +135,10 @@ public:
 
   ShareMatrix<mode> operator*(const ShareMatrix<mode>&) const;
 
+  void reveal() {
+    for (auto& s: vals) { s.reveal(); }
+  }
+
 private:
   Share<mode>& get(std::size_t i, std::size_t j) {
     return vals[j*n + i];
@@ -138,7 +148,8 @@ private:
     return vals[j*n + i];
   }
 
-  bool transposed;
+  // is the matrix transposed?
+  bool t;
   std::size_t n;
   std::size_t m;
   std::vector<Share<mode>> vals;
@@ -164,7 +175,30 @@ ShareMatrix<mode> operator*(const Matrix& x, const ShareMatrix<mode>& y) {
 }
 
 template <Mode mode>
+ShareMatrix<mode> operator*(const ShareMatrix<mode>& x, const Matrix& y) {
+  const auto l = x.rows();
+  const auto n = y.rows();
+  const auto m = y.cols();
+  assert (x.cols() == n);
+
+  ShareMatrix<mode> out(l, m);
+  for (std::size_t i = 0; i < l; ++i) {
+    for (std::size_t j = 0; j < m; ++j) {
+      for (std::size_t k = 0; k < n; ++k) {
+        if (y(k, j)) { out(i, j) ^= x(i, k); }
+      }
+    }
+  }
+  return out;
+}
+
+template <Mode mode>
 ShareMatrix<mode> outer_product(const ShareMatrix<mode>&, const ShareMatrix<mode>&);
+
+
+// Computes (a + color(a)) x b where x denotes the vector outer product.
+template <Mode mode>
+ShareMatrix<mode> half_outer_product(const ShareMatrix<mode>&, const ShareMatrix<mode>&);
 
 
 #endif

@@ -2,6 +2,7 @@
 #define GF256_H__
 
 #include <cstdint>
+#include <cstddef>
 
 
 std::uint8_t mul_gf256(std::uint8_t, std::uint8_t);
