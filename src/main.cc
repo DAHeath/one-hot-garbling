@@ -1,8 +1,9 @@
 #include "private_function.h"
 #include "non_blackbox_prf.h"
+
 #include "share_matrix.h"
 #include "matrix.h"
-#include "aes_sbox.h"
+#include "non_blackbox_gf256.h"
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
@@ -18,13 +19,13 @@ ShareMatrix<mode> test_mul_gf256() {
   auto x = ShareMatrix<mode>(8, 1);
   auto y = ShareMatrix<mode>(8, 1);
 
-  x[0] = Share<mode>::ginput(true);
-  x[1] = Share<mode>::ginput(true);
+  x[0] = Share<mode>::bit(true);
+  x[1] = Share<mode>::bit(true);
 
   y[0] = Share<mode>::bit(true);
   y[7] = Share<mode>::bit(true);
 
-  return full_mul_gf256(x, y);
+  return aes_sbox<mode>(x);
 }
 
 
@@ -66,5 +67,5 @@ int main() {
   std::cout << decode(g, e) << '\n';
   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
 
-  std::cout << byte_to_vector(mul_gf256(3, 129)) << '\n';
+  std::cout << byte_to_vector(invert_gf256(129)) << '\n';
 }

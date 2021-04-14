@@ -60,3 +60,5 @@ std::vector<std::uint8_t> gf256_invert_table = init_invert_table();
 std::uint8_t invert_gf256(std::uint8_t x) {
   return gf256_invert_table[x];
 }
+
+
