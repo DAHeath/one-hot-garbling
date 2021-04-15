@@ -7,8 +7,11 @@
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  auto x = ShareMatrix<mode>(12, 12);
-  auto y = ShareMatrix<mode>(12, 12);
+  auto x = ShareMatrix<mode>(8, 32);
+  auto y = ShareMatrix<mode>(32, 32);
+
+  x(5, 1) = Share<mode>::ginput(true);
+  y(10, 1) = Share<mode>::ginput(true);
 
   return x * y;
 }
@@ -61,11 +64,11 @@ int main() {
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
-  const auto g = test_mul_gf256<Mode::G>();
-  const auto e = test_mul_gf256<Mode::E>();
+  const auto g = test_matrix<Mode::G>();
+  const auto e = test_matrix<Mode::E>();
 
   std::cout << decode(g, e) << '\n';
   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
 
-  std::cout << byte_to_vector(invert_gf256(129)) << '\n';
+  /* std::cout << byte_to_vector(invert_gf256(129)) << '\n'; */
 }

@@ -40,13 +40,13 @@ ShareMatrix<mode> half_mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<m
   const auto xy_outer = half_outer_product<mode>(x, y);
 
   // The vector of coefficients of x*y without modular reduction.
-  auto xy_unreduced = ShareMatrix<mode>::vector(15);
+  auto unreduced = ShareMatrix<mode>::vector(15);
   for (std::size_t i = 0; i < 8; ++i) {
     for (std::size_t j = 0; j < 8; ++j) {
-      xy_unreduced[i + j] ^= xy_outer(i, j);
+      unreduced[i + j] ^= xy_outer(i, j);
     }
   }
-  return reduction_table * xy_unreduced;
+  return reduction_table * unreduced;
 }
 
 
@@ -72,12 +72,12 @@ ShareMatrix<mode> gf256_invert(const ShareMatrix<mode>& x) {
   // It is secure to show x*y to E
   xy.reveal();
 
-  const auto xyy_outer = inverse_table * xy.unary_outer_product(y);
+  const auto xy_outer = inverse_table * xy.unary_outer_product(y);
 
   auto unreduced = ShareMatrix<mode>::vector(15);
   for (std::size_t i = 0; i < 8; ++i) {
     for (std::size_t j = 0; j < 8; ++j) {
-      unreduced[i + j] ^= xyy_outer(i, j);
+      unreduced[i + j] ^= xy_outer(i, j);
     }
   }
   return reduction_table * unreduced;

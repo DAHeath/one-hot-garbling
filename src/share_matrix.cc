@@ -139,8 +139,44 @@ template ShareMatrix<Mode::G> half_outer_product(const ShareMatrix<Mode::G>&, co
 template ShareMatrix<Mode::E> half_outer_product(const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
 
 
+constexpr std::size_t default_outer_product_slice_size = 8;
+
+
+template <Mode mode>
+ShareMatrix<mode> wide_half_outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mode>& Y) {
+  assert(X.cols() == 1);
+  assert(Y.cols() == 1);
+
+  const auto n = X.rows();
+  const auto m = Y.rows();
+
+  ShareMatrix<mode> out(n, m);
+
+  const auto def = default_outer_product_slice_size;
+
+  for (std::size_t s = 0; s < (n + def-1)/def; ++s) {
+    std::size_t slice_size = def;
+    if (slice_size*(s + 1) > n) { slice_size = n % slice_size; }
+
+    ShareMatrix<mode> slice(slice_size, 1);
+    for (std::size_t i = 0; i < slice_size; ++i) {
+      slice[i] = X[i + s*def];
+    }
+    const auto half = half_outer_product<mode>(slice, Y);
+    for (std::size_t i = 0; i < slice_size; ++i) {
+      for (std::size_t j = 0; j < m; ++j) {
+        out(def*s + i, j) = half(i, j);
+      }
+    }
+  }
+  return out;
+}
+
+
 template <Mode mode>
 ShareMatrix<mode> outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mode>& Y) {
+  // An outer product can be computed by half outer products.
+  // Unfortunately, due to exponential computation scaling, we need to "chunk" the outer product into slices.
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
 
@@ -148,8 +184,8 @@ ShareMatrix<mode> outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mo
   const auto xy = ShareMatrix<mode>::constant(X.color().outer_product(Y.color()));
 
   return
-    half_outer_product<mode>(X, Y) ^
-    half_outer_product<mode>(Y, x).transposed() ^
+    wide_half_outer_product<mode>(X, Y) ^
+    wide_half_outer_product<mode>(Y, x).transposed() ^
     xy;
 }
 
