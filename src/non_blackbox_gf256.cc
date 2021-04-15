@@ -17,6 +17,7 @@ Matrix make_reduction_table() {
   table(12, 0) = 1; table(12, 1) = 1; table(12, 3) = 1; table(12, 5) = 1; table(12, 7) = 1;
   table(13, 0) = 1; table(13, 2) = 1; table(13, 3) = 1; table(13, 6) = 1;
   table(14, 1) = 1; table(14, 3) = 1; table(14, 4) = 1; table(14, 7) = 1;
+  table.transpose();
   return table;
 }
 
@@ -45,8 +46,7 @@ ShareMatrix<mode> half_mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<m
       xy_unreduced[i + j] ^= xy_outer(i, j);
     }
   }
-
-  return (xy_unreduced.transposed() * reduction_table).transposed();
+  return reduction_table * xy_unreduced;
 }
 
 
@@ -80,7 +80,7 @@ ShareMatrix<mode> gf256_invert(const ShareMatrix<mode>& x) {
       unreduced[i + j] ^= xyy_outer(i, j);
     }
   }
-  return (unreduced.transposed() * reduction_table).transposed();
+  return reduction_table * unreduced;
 }
 
 
