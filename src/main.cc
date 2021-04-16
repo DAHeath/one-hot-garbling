@@ -13,8 +13,8 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  auto x = ShareMatrix<mode>(128, 128);
-  auto y = ShareMatrix<mode>(128, 128);
+  auto x = ShareMatrix<mode>(32, 32);
+  auto y = ShareMatrix<mode>(32, 32);
 
   x(5, 1) = Share<mode>::ginput(true);
   y(10, 1) = Share<mode>::ginput(true);
@@ -35,30 +35,6 @@ ShareMatrix<mode> test_mul_gf256() {
   y[7] = Share<mode>::bit(true);
 
   return aes_sbox<mode>(x);
-}
-
-
-Matrix decode(const ShareMatrix<Mode::G>& g, const ShareMatrix<Mode::E>& e) {
-  const auto n = g.rows();
-  const auto m = g.cols();
-
-  Matrix out(n, m);
-  for (std::size_t i = 0; i < n; ++i) {
-    for (std::size_t j = 0; j < m; ++j) {
-      if (((*g(i, j)) ^ (*e(i, j))) == 0) {
-        out(i, j) = 0;
-      } else if ((*g(i, j) ^ *(e(i, j))) == Share<Mode::G>::delta()) {
-        out(i, j) = 1;
-      } else {
-        std::cerr << "ERROR: BAD LABEL!\n";
-        std::cerr << *g(i, j) << '\n';
-        std::cerr << *e(i, j) << '\n';
-        std::cerr << Share<Mode::G>::delta() << '\n';
-        std::exit(1);
-      }
-    }
-  }
-  return out;
 }
 
 

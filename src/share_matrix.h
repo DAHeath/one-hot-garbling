@@ -201,4 +201,19 @@ template <Mode mode>
 ShareMatrix<mode> half_outer_product(const ShareMatrix<mode>&, const ShareMatrix<mode>&);
 
 
+
+inline Matrix decode(const ShareMatrix<Mode::G>& g, const ShareMatrix<Mode::E>& e) {
+  const auto n = g.rows();
+  const auto m = g.cols();
+
+  Matrix out(n, m);
+  for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t j = 0; j < m; ++j) {
+      out(i, j) = decode(g(i, j), e(i, j));
+    }
+  }
+  return out;
+}
+
+
 #endif
