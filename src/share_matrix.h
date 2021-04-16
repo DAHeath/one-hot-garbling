@@ -258,21 +258,27 @@ ShareMatrix<mode> operator*(const ShareMatrix<mode>& x, const Matrix& y) {
   return xx * y;
 }
 
-
-// Let a be this vector and b be the other vector.
-// Let c be the color of this vector.
-//
-// This computes [|U(a + c) x b |] where x denotes the vector outer product.
 template <Mode mode>
-ShareMatrix<mode> unary_outer_product(const ShareSpan<mode>&, const ShareSpan<mode>&);
+void outer_product(ShareSpan<mode>, ShareSpan<mode>, ShareMatrix<mode>&);
 
 template <Mode mode>
-ShareMatrix<mode> outer_product(ShareSpan<mode>, ShareSpan<mode>);
+ShareMatrix<mode> outer_product(ShareSpan<mode> x, ShareSpan<mode> y) {
+  ShareMatrix<mode> out(x.rows(), y.cols());
+  outer_product(x, y, out);
+  return out;
+}
 
 
 // Computes (a + color(a)) x b where x denotes the vector outer product.
 template <Mode mode>
-ShareMatrix<mode> half_outer_product(const ShareSpan<mode>&, const ShareSpan<mode>&);
+void half_outer_product(const ShareSpan<mode>&, const ShareSpan<mode>&, ShareMatrix<mode>&);
+
+template <Mode mode>
+ShareMatrix<mode> half_outer_product(ShareSpan<mode> x, ShareSpan<mode> y) {
+  ShareMatrix<mode> out(x.rows(), y.cols());
+  half_outer_product(x, y, out);
+  return out;
+}
 
 
 
