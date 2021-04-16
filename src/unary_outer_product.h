@@ -4,20 +4,14 @@
 
 #include "share_matrix.h"
 
-
-constexpr std::size_t maximum_unary_outer_product_size = 12;
-
-
-std::span<Share<Mode::G>> g_unary_seeds();
-std::span<Share<Mode::E>> e_unary_seeds();
-
-
-
-
-// Let a be this vector and b be the other vector.
-// Let c be the color of this vector.
+// Let c be the color of x.
+// Let n be the length of x.
+// Let m be the length of y.
+// Let f be a function from n bits to l bits
 //
-// This computes [|T(f) * (U(a + c) x b) |] where x denotes the vector outer product.
+// This computes [|T(f) * (U(x + c) & y) |] where & denotes the vector outer
+// product and T(f) denotes the truth table of f.
+// The resulting matrix is l x m, and is in-place added into `out`.
 template <Mode mode, typename F>
 void unary_outer_product(
     const F& f, const ShareSpan<mode>& x, const ShareSpan<mode>& y, ShareMatrix<mode>& out) {
@@ -29,10 +23,7 @@ void unary_outer_product(
   const auto m = y.rows();
   assert(out.cols() == m);
 
-  std::span<Share<mode>> seeds;
-  if constexpr (mode == Mode::G) { seeds = g_unary_seeds(); }
-  if constexpr (mode == Mode::E) { seeds = e_unary_seeds(); }
-
+  std::vector<Share<mode>> seeds(1 << n);
 
   // We maintain the seed buffer by putting seeds into appropriate tree locations.
   // The buffer only has to be large enough for the final layer as we only

@@ -1,20 +1,10 @@
 #include "share_matrix.h"
-
-#include <iostream>
 #include "unary_outer_product.h"
 
+#include <iostream>
+#include <thread>
+
 constexpr std::size_t default_outer_product_slice_size = 8;
-
-
-constexpr std::size_t log2(std::size_t x) {
-  std::size_t out = 0;
-  x >>= 1;
-  while (x > 0) {
-    ++out;
-    x >>= 1;
-  }
-  return out;
-}
 
 
 template <Mode mode>
@@ -26,13 +16,11 @@ void partial_half_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>&
   assert(out.rows() + starting_row >= n);
   assert(out.cols() == m);
 
-  const auto logn = log2(n);
-
-  const auto identity = [logn, starting_row](
+  const auto identity = [n, starting_row](
       std::size_t i, std::size_t j, const Share<mode>& s,
       ShareMatrix<mode>& out) {
 
-    for (std::size_t k = 0; k < logn; ++k) {
+    for (std::size_t k = 0; k < n; ++k) {
       if ((i & (1 << k)) > 0) {
         out(k + starting_row, j) ^= s;
       }
@@ -84,12 +72,21 @@ void outer_product(ShareSpan<mode> X, ShareSpan<mode> Y, ShareMatrix<mode>& out)
   const auto x = ShareMatrix<mode>::constant(X.color());
   const auto xy = ShareMatrix<mode>::constant(X.color().outer_product(Y.color()));
 
+  std::cout << "HERE\n";
+  ShareMatrix<mode> other_half(out.cols(), out.rows());
+  /* half_outer_product<mode>(Y, x, other_half); */
+  std::thread th ([&]{
+    half_outer_product<mode>(Y, x, other_half);
+  });
+  std::cout << "HERE\n";
   half_outer_product<mode>(X, Y, out);
-  out.transpose();
-  half_outer_product<mode>(Y, x, out);
-  out.transpose();
+  std::cout << "HERE\n";
+  th.join();
+  other_half.transpose();
+  out ^= other_half;
   out ^= xy;
 }
+
 
 template ShareMatrix<Mode::G> outer_product(ShareSpan<Mode::G>, ShareSpan<Mode::G>);
 template ShareMatrix<Mode::E> outer_product(ShareSpan<Mode::E>, ShareSpan<Mode::E>);
@@ -112,3 +109,24 @@ ShareMatrix<mode> ShareMatrix<mode>::operator*(const ShareMatrix<mode>& o) const
 
 template ShareMatrix<Mode::G> ShareMatrix<Mode::G>::operator*(const ShareMatrix<Mode::G>&) const;
 template ShareMatrix<Mode::E> ShareMatrix<Mode::E>::operator*(const ShareMatrix<Mode::E>&) const;
+
+
+template <Mode mode>
+ShareMatrix<mode> naive_matrix_multiplication(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+  const auto l = x.rows();
+  const auto n = y.rows();
+  const auto m = y.cols();
+  assert (x.cols() == n);
+
+  ShareMatrix<mode> out(l, m);
+  for (std::size_t i = 0; i < n; ++i) {
+    naive_outer_product<mode>(x.column(i), y.row(i), out);
+  }
+  return out;
+}
+
+
+template ShareMatrix<Mode::G> naive_matrix_multiplication<Mode::G>(
+    const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
+template ShareMatrix<Mode::E> naive_matrix_multiplication<Mode::E>(
+    const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);

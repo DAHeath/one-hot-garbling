@@ -296,4 +296,19 @@ inline Matrix decode(const ShareMatrix<Mode::G>& g, const ShareMatrix<Mode::E>& 
 }
 
 
+
+template <Mode mode>
+void naive_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>& y, ShareMatrix<mode>& out) {
+  for (std::size_t i = 0; i < x.rows(); ++i) {
+    for (std::size_t j = 0; j < y.rows(); ++j) {
+      out(i, j) = x[i] & y[j];
+    }
+  }
+}
+
+
+template <Mode mode>
+ShareMatrix<mode> naive_matrix_multiplication(const ShareMatrix<mode>&, const ShareMatrix<mode>&);
+
+
 #endif

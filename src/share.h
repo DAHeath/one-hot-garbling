@@ -16,7 +16,7 @@ std::size_t n_ciphertexts();
 template <Mode mode>
 struct Share {
 public:
-  static inline std::size_t nonce;
+  static thread_local inline std::size_t nonce;
   static inline PRF fixed_key;
 
   static void initialize(std::bitset<128> fixed_key, std::bitset<128> seed);

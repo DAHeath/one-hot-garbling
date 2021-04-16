@@ -15,13 +15,18 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  auto x = ShareMatrix<mode>(64, 64);
-  auto y = ShareMatrix<mode>(64, 64);
+  constexpr std::size_t n = 128;
 
-  x(5, 1) = Share<mode>::ginput(true);
-  y(10, 1) = Share<mode>::ginput(true);
+  auto x = ShareMatrix<mode>(n, n);
+  for (std::size_t i = 0; i < n; ++i) {
+    x(i, i) = Share<mode>::ginput(true);
+  }
+
+  auto y = ShareMatrix<mode>(n, n);
+  y(15, 3) = Share<mode>::ginput(true);
 
   return x * y;
+  /* return naive_matrix_multiplication<mode>(x, y); */
 }
 
 
@@ -51,7 +56,7 @@ int main() {
   const auto g = test_matrix<Mode::G>();
   const auto e = test_matrix<Mode::E>();
 
-  std::cout << decode(g, e) << '\n';
+  /* std::cout << decode(g, e) << '\n'; */
   std::cout << std::dec << n_ciphertexts() << "\n";
 
   /* std::cout << byte_to_vector(invert_gf256(129)) << '\n'; */
