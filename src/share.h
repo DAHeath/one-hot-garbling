@@ -3,13 +3,11 @@
 
 
 #include "mode.h"
-#include "gf256.h"
 #include "prg.h"
 
 #include <bitset>
 #include <span>
-#include <iostream>
-#include <iomanip>
+#include <ostream>
 
 
 std::size_t n_ciphertexts();

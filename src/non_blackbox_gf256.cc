@@ -72,7 +72,7 @@ ShareMatrix<mode> gf256_invert(const ShareMatrix<mode>& x) {
   // It is secure to show x*y to E
   xy.reveal();
 
-  const auto xy_outer = inverse_table * xy.unary_outer_product(y);
+  const auto xy_outer = inverse_table * unary_outer_product<mode>(xy, y);
 
   auto unreduced = ShareMatrix<mode>::vector(15);
   for (std::size_t i = 0; i < 8; ++i) {

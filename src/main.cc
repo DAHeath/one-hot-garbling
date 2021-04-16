@@ -2,6 +2,8 @@
 #include "non_blackbox_gf256.h"
 #include "integer.h"
 
+#include <iostream>
+
 
 template <Mode mode>
 ShareMatrix<mode> test_integer() {
@@ -13,8 +15,8 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  auto x = ShareMatrix<mode>(32, 32);
-  auto y = ShareMatrix<mode>(32, 32);
+  auto x = ShareMatrix<mode>(64, 64);
+  auto y = ShareMatrix<mode>(64, 64);
 
   x(5, 1) = Share<mode>::ginput(true);
   y(10, 1) = Share<mode>::ginput(true);

@@ -2,6 +2,8 @@
 #include "prg.h"
 
 #include <vector>
+#include <iomanip>
+#include <iostream>
 
 
 std::bitset<128> delta;

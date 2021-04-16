@@ -1,12 +1,12 @@
 #include "share_matrix.h"
 
 template <Mode mode>
-ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>& o) const {
-  assert(cols() == 1);
-  assert(o.cols() == 1);
+ShareMatrix<mode> unary_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>& y) {
+  assert(x.cols() == 1);
+  assert(y.cols() == 1);
 
-  const auto n = rows();
-  const auto m = o.rows();
+  const auto n = x.rows();
+  const auto m = y.rows();
 
   std::vector<Share<mode>> seeds(1 << n);
   // We maintain the seed buffer by putting seeds into appropriate tree locations.
@@ -18,17 +18,17 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
 
   // As a base case, we can derive the first two seeds from the possible labels for x[0].
   if constexpr (mode == Mode::G) {
-    if ((*this)[n-1].color()) {
-      seeds[0] = (*this)[n-1].H(); // S00
-      seeds[1] = (~(*this)[n-1]).H(); // S01
+    if (x[n-1].color()) {
+      seeds[0] = x[n-1].H(); // S00
+      seeds[1] = (~x[n-1]).H(); // S01
     } else {
-      seeds[1] = (*this)[n-1].H(); // S00
-      seeds[0] = (~(*this)[n-1]).H(); // S01
+      seeds[1] = x[n-1].H(); // S00
+      seeds[0] = (~x[n-1]).H(); // S01
     }
   } else {
-    seeds[!(*this)[n-1].color()] = (*this)[n-1].H();
+    seeds[!x[n-1].color()] = x[n-1].H();
   }
-  missing |= (*this)[n-1].color();
+  missing |= x[n-1].color();
   ++Share<mode>::nonce;
 
   const auto one = Share<mode>::bit(true);
@@ -37,7 +37,7 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
   // Now, iterate over the levels of the tree.
   for (std::size_t i = 1; i < n; ++i) {
 
-    const auto key0 = (*this)[n-i-1] ^ ((*this)[n-i-1].color() ? zero : one);
+    const auto key0 = x[n-i-1] ^ (x[n-i-1].color() ? zero : one);
     const auto key1 = key0 ^ one;
 
     if constexpr (mode == Mode::G) {
@@ -56,7 +56,7 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
       (evens ^ (key0.H())).send();
       (odds ^ (key1.H())).send();
 
-      const auto bit = (*this)[n-i-1].color();
+      const auto bit = x[n-i-1].color();
       missing = (missing << 1) | bit;
     } else {
       const auto g_evens = Share<mode>::recv();
@@ -75,11 +75,11 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
       }
 
       // use the color of the `i`th share to figure out which element is missing at the next level.
-      const auto bit = (*this)[n-i-1].color();
+      const auto bit = x[n-i-1].color();
       missing = (missing << 1) | bit;
 
       // assign the sibling of the missing node by (1) decrypting the appropriate row given by
-      seeds[missing ^ 1] = (*this)[n-i-1].H() ^ (bit ? (g_evens ^ e_evens) : (g_odds ^ e_odds));
+      seeds[missing ^ 1] = x[n-i-1].H() ^ (bit ? (g_evens ^ e_evens) : (g_odds ^ e_odds));
     }
 
     ++Share<mode>::nonce;
@@ -99,7 +99,7 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
         sum ^= out(i, j);
         ++Share<mode>::nonce;
       }
-      sum ^= o[j];
+      sum ^= y[j];
       sum.send();
     }
   } else {
@@ -113,7 +113,7 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
         }
         ++Share<mode>::nonce;
       }
-      out(missing, j) = e_sum ^ g_sum ^ o[j];
+      out(missing, j) = e_sum ^ g_sum ^ y[j];
     }
   }
   return out;
@@ -121,29 +121,29 @@ ShareMatrix<mode> ShareMatrix<mode>::unary_outer_product(const ShareMatrix<mode>
 
 
 template ShareMatrix<Mode::G>
-ShareMatrix<Mode::G>::unary_outer_product(const ShareMatrix<Mode::G>&) const;
+unary_outer_product(const ShareSpan<Mode::G>&, const ShareSpan<Mode::G>&);
 template ShareMatrix<Mode::E>
-ShareMatrix<Mode::E>::unary_outer_product(const ShareMatrix<Mode::E>&) const;
+unary_outer_product(const ShareSpan<Mode::E>&, const ShareSpan<Mode::E>&);
 
 
 template <Mode mode>
-ShareMatrix<mode> half_outer_product(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+ShareMatrix<mode> half_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>& y) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
 
   auto id_n = identity_table(x.rows());
-  return id_n * x.unary_outer_product(y);
+  return id_n * unary_outer_product<mode>(x, y);
 }
 
-template ShareMatrix<Mode::G> half_outer_product(const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
-template ShareMatrix<Mode::E> half_outer_product(const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
+template ShareMatrix<Mode::G> half_outer_product(const ShareSpan<Mode::G>&, const ShareSpan<Mode::G>&);
+template ShareMatrix<Mode::E> half_outer_product(const ShareSpan<Mode::E>&, const ShareSpan<Mode::E>&);
 
 
 constexpr std::size_t default_outer_product_slice_size = 8;
 
 
 template <Mode mode>
-ShareMatrix<mode> wide_half_outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mode>& Y) {
+ShareMatrix<mode> wide_half_outer_product(ShareSpan<mode> X, ShareSpan<mode> Y) {
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
 
@@ -174,7 +174,7 @@ ShareMatrix<mode> wide_half_outer_product(const ShareMatrix<mode>& X, const Shar
 
 
 template <Mode mode>
-ShareMatrix<mode> outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mode>& Y) {
+ShareMatrix<mode> outer_product(ShareSpan<mode> X, ShareSpan<mode> Y) {
   // An outer product can be computed by half outer products.
   // Unfortunately, due to exponential computation scaling, we need to "chunk" the outer product into slices.
   assert(X.cols() == 1);
@@ -189,8 +189,8 @@ ShareMatrix<mode> outer_product(const ShareMatrix<mode>& X, const ShareMatrix<mo
     xy;
 }
 
-template ShareMatrix<Mode::G> outer_product(const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
-template ShareMatrix<Mode::E> outer_product(const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
+template ShareMatrix<Mode::G> outer_product(ShareSpan<Mode::G>, ShareSpan<Mode::G>);
+template ShareMatrix<Mode::E> outer_product(ShareSpan<Mode::E>, ShareSpan<Mode::E>);
 
 
 template <Mode mode>
