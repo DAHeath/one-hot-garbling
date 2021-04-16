@@ -4,11 +4,21 @@
 #include "share_matrix.h"
 #include "matrix.h"
 #include "non_blackbox_gf256.h"
+#include "integer.h"
+
+
+template <Mode mode>
+ShareMatrix<mode> test_integer() {
+  return integer_multiply(
+      ShareMatrix<mode>::constant(from_uint32(5555555)),
+      ShareMatrix<mode>::constant(from_uint32(44445)));
+}
+
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  auto x = ShareMatrix<mode>(8, 32);
-  auto y = ShareMatrix<mode>(32, 32);
+  auto x = ShareMatrix<mode>(128, 128);
+  auto y = ShareMatrix<mode>(128, 128);
 
   x(5, 1) = Share<mode>::ginput(true);
   y(10, 1) = Share<mode>::ginput(true);
@@ -67,7 +77,7 @@ int main() {
   const auto g = test_matrix<Mode::G>();
   const auto e = test_matrix<Mode::E>();
 
-  std::cout << decode(g, e) << '\n';
+  /* std::cout << to_uint32(decode(g, e)) << '\n'; */
   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
 
   /* std::cout << byte_to_vector(invert_gf256(129)) << '\n'; */
