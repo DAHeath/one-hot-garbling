@@ -1,8 +1,4 @@
-#include "private_function.h"
-#include "non_blackbox_prf.h"
-
 #include "share_matrix.h"
-#include "matrix.h"
 #include "non_blackbox_gf256.h"
 #include "integer.h"
 
@@ -74,11 +70,11 @@ int main() {
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
-  const auto g = test_mul_gf256<Mode::G>();
-  const auto e = test_mul_gf256<Mode::E>();
+  const auto g = test_matrix<Mode::G>();
+  const auto e = test_matrix<Mode::E>();
 
-  /* std::cout << to_uint32(decode(g, e)) << '\n'; */
-  std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
+  std::cout << decode(g, e) << '\n';
+  std::cout << std::dec << n_ciphertexts() << "\n";
 
   /* std::cout << byte_to_vector(invert_gf256(129)) << '\n'; */
 }
