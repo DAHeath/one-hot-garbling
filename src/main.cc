@@ -74,8 +74,8 @@ int main() {
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
-  const auto g = test_matrix<Mode::G>();
-  const auto e = test_matrix<Mode::E>();
+  const auto g = test_mul_gf256<Mode::G>();
+  const auto e = test_mul_gf256<Mode::E>();
 
   /* std::cout << to_uint32(decode(g, e)) << '\n'; */
   std::cout << std::dec << (n_ciphertexts() + n_table_ciphertexts()) << "\n";
