@@ -2,7 +2,6 @@
 #include "unary_outer_product.h"
 
 #include <iostream>
-#include <thread>
 
 constexpr std::size_t default_outer_product_slice_size = 8;
 
@@ -72,18 +71,10 @@ void outer_product(ShareSpan<mode> X, ShareSpan<mode> Y, ShareMatrix<mode>& out)
   const auto x = ShareMatrix<mode>::constant(X.color());
   const auto xy = ShareMatrix<mode>::constant(X.color().outer_product(Y.color()));
 
-  std::cout << "HERE\n";
-  ShareMatrix<mode> other_half(out.cols(), out.rows());
-  /* half_outer_product<mode>(Y, x, other_half); */
-  std::thread th ([&]{
-    half_outer_product<mode>(Y, x, other_half);
-  });
-  std::cout << "HERE\n";
   half_outer_product<mode>(X, Y, out);
-  std::cout << "HERE\n";
-  th.join();
-  other_half.transpose();
-  out ^= other_half;
+  out.transpose();
+  half_outer_product<mode>(Y, x, out);
+  out.transpose();
   out ^= xy;
 }
 
