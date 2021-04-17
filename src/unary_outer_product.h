@@ -14,8 +14,7 @@
 // The resulting matrix is l x m, and is in-place added into `out`.
 template <Mode mode, typename F>
 void unary_outer_product(
-    const F& f, const ShareSpan<mode>& x, const ShareSpan<mode>& y, ShareMatrix<mode>& out) {
-  assert(x.rows() <= maximum_unary_outer_product_size);
+    const F& f, const ShareCSpan<mode>& x, const ShareCSpan<mode>& y, const ShareSpan<mode>& out) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
 

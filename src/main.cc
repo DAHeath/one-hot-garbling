@@ -15,7 +15,7 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  constexpr std::size_t n = 8;
+  constexpr std::size_t n = 16;
 
   auto x = ShareMatrix<mode>(n, n);
   for (std::size_t i = 0; i < n; ++i) {
@@ -24,6 +24,7 @@ ShareMatrix<mode> test_matrix() {
 
   auto y = ShareMatrix<mode>(n, n);
   y(3, 3) = Share<mode>::ginput(true);
+  y(10, 3) = Share<mode>::ginput(true);
 
   return x * y;
   /* return naive_matrix_multiplication<mode>(x, y); */

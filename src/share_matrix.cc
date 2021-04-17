@@ -7,21 +7,21 @@ constexpr std::size_t default_outer_product_slice_size = 8;
 
 
 template <Mode mode>
-void partial_half_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>& y, ShareMatrix<mode>& out, std::size_t starting_row) {
+void partial_half_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode>& y, const ShareSpan<mode>& out) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
   const auto n = x.rows();
   const auto m = y.rows();
-  assert(out.rows() + starting_row >= n);
+  assert(out.rows() == n);
   assert(out.cols() == m);
 
-  const auto identity = [n, starting_row](
+  const auto identity = [n](
       std::size_t i, std::size_t j, const Share<mode>& s,
-      ShareMatrix<mode>& out) {
+      const ShareSpan<mode>& out) {
 
     for (std::size_t k = 0; k < n; ++k) {
       if ((i & (1 << k)) > 0) {
-        out(k + starting_row, j) ^= s;
+        out(k, j) ^= s;
       }
     }
   };
@@ -31,7 +31,7 @@ void partial_half_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>&
 
 
 template <Mode mode>
-void half_outer_product(const ShareSpan<mode>& X, const ShareSpan<mode>& Y, ShareMatrix<mode>& out) {
+void half_outer_product(const ShareCSpan<mode>& X, const ShareCSpan<mode>& Y, const ShareSpan<mode>& out) {
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
 
@@ -51,18 +51,19 @@ void half_outer_product(const ShareSpan<mode>& X, const ShareSpan<mode>& Y, Shar
     for (std::size_t i = 0; i < slice_size; ++i) {
       slice[i] = X[i + s*def];
     }
-    partial_half_outer_product<mode>(slice, Y, out, def*s);
+    auto part = out.subrow_matrix(def*s, def*s + slice_size);
+    partial_half_outer_product<mode>(slice, Y, part);
   }
 }
 
-template void half_outer_product(const ShareSpan<Mode::G>&, const ShareSpan<Mode::G>&, ShareMatrix<Mode::G>&);
-template void half_outer_product(const ShareSpan<Mode::E>&, const ShareSpan<Mode::E>&, ShareMatrix<Mode::E>&);
+template void half_outer_product(const ShareCSpan<Mode::G>&, const ShareCSpan<Mode::G>&, const ShareSpan<Mode::G>&);
+template void half_outer_product(const ShareCSpan<Mode::E>&, const ShareCSpan<Mode::E>&, const ShareSpan<Mode::E>&);
 
 
 
 
 template <Mode mode>
-void outer_product(ShareSpan<mode> X, ShareSpan<mode> Y, ShareMatrix<mode>& out) {
+void outer_product(ShareCSpan<mode> X, ShareCSpan<mode> Y, ShareMatrix<mode>& out) {
   // An outer product can be computed by half outer products.
   // Unfortunately, due to exponential computation scaling, we need to "chunk" the outer product into slices.
   assert(X.cols() == 1);
@@ -79,8 +80,8 @@ void outer_product(ShareSpan<mode> X, ShareSpan<mode> Y, ShareMatrix<mode>& out)
 }
 
 
-template ShareMatrix<Mode::G> outer_product(ShareSpan<Mode::G>, ShareSpan<Mode::G>);
-template ShareMatrix<Mode::E> outer_product(ShareSpan<Mode::E>, ShareSpan<Mode::E>);
+template ShareMatrix<Mode::G> outer_product(ShareCSpan<Mode::G>, ShareCSpan<Mode::G>);
+template ShareMatrix<Mode::E> outer_product(ShareCSpan<Mode::E>, ShareCSpan<Mode::E>);
 
 
 template <Mode mode>

@@ -9,10 +9,10 @@
 
 
 template <Mode mode>
-struct ShareSpan {
+struct ShareCSpan {
 public:
-  ShareSpan() { }
-  ShareSpan(
+  ShareCSpan() { }
+  ShareCSpan(
     bool t,
     std::size_t n,
     std::size_t m,
@@ -31,7 +31,7 @@ public:
     return (*this)(i, 0);
   }
 
-  ShareSpan transposed() const {
+  ShareCSpan transposed() const {
     return { !t, n, m, i_step, j_step, vals };
   }
 
@@ -62,7 +62,62 @@ private:
 };
 
 
-template struct ShareSpan<Mode::G>;
+template <Mode mode>
+struct ShareSpan {
+public:
+  ShareSpan() { }
+  ShareSpan(
+    bool t,
+    std::size_t n,
+    std::size_t m,
+    std::size_t i_step,
+    std::size_t j_step,
+    std::span<Share<mode>> vals)
+    : t(t), n(n), m(m), i_step(i_step), j_step(j_step), vals(vals) { }
+
+  Share<mode>& operator()(std::size_t i, std::size_t j) const {
+    if (t) { return get(j, i); } else { return get(i, j); }
+  }
+
+  Share<mode>& operator[](std::size_t i) const {
+    assert(cols() == 1);
+    return (*this)(i, 0);
+  }
+
+  ShareSpan transposed() const {
+    return { !t, n, m, i_step, j_step, vals };
+  }
+
+  ShareSpan<mode> subrow_matrix(std::size_t i0, std::size_t i1) const {
+    return { false, i1 - i0, m, i_step, j_step, vals.subspan(i0) };
+  }
+
+  const std::size_t rows() const { return t ? m : n; }
+  const std::size_t cols() const { return t ? n : m; }
+
+  Matrix color() const {
+    Matrix out(rows(), cols());
+    for (std::size_t i = 0; i < rows(); ++i) {
+      for (std::size_t j = 0; j < cols(); ++j) {
+        out(i, j) = (*this)(i, j).color();
+      }
+    }
+    return out;
+  }
+
+private:
+  Share<mode>& get(std::size_t i, std::size_t j) const {
+    return vals[j*j_step + i*i_step];
+  }
+
+  bool t;
+  std::size_t n;
+  std::size_t m;
+  std::size_t i_step;
+  std::size_t j_step;
+  std::span<Share<mode>> vals;
+};
+
 
 template <Mode mode>
 struct ShareMatrix {
@@ -93,16 +148,13 @@ public:
     return out;
   }
 
-  operator ShareSpan<mode>() const {
-    return { t, n, m, 1, n, vals };
-  }
+  operator ShareCSpan<mode>() const { return { t, n, m, 1, n, vals }; }
+  operator ShareSpan<mode>() { return { t, n, m, 1, n, vals }; }
 
-  static ShareMatrix vector(std::size_t n) {
-    return { n, 1 };
-  }
+  static ShareMatrix vector(std::size_t n) { return { n, 1 }; }
 
   // Column vector containing the `i`th row.
-  ShareSpan<mode> row(std::size_t i) const {
+  ShareCSpan<mode> row(std::size_t i) const {
     // TODO ensure transposition works
     std::span v = vals;
     v = v.subspan(i);
@@ -110,11 +162,21 @@ public:
   }
 
   // Column vector containing the `j`th column.
-  ShareSpan<mode> column(std::size_t j) const {
+  ShareCSpan<mode> column(std::size_t j) const {
     // TODO ensure transposition works
     std::span v = vals;
     v = v.subspan(j*n);
     return { false, n, 1, 1, 1, v };
+  }
+
+  ShareCSpan<mode> subrow_matrix(std::size_t i0, std::size_t i1) const {
+    std::span<const Share<mode>> v = vals;
+    return { false, i1 - i0, m, 1, n, v.subspan(i0) };
+  }
+
+  ShareSpan<mode> subrow_matrix(std::size_t i0, std::size_t i1) {
+    std::span<Share<mode>> v = vals;
+    return { false, i1 - i0, m, 1, n,  v.subspan(i0) };
   }
 
   Share<mode>& operator()(std::size_t i, std::size_t j) {
@@ -137,7 +199,7 @@ public:
     return (*this)(i, 0);
   }
 
-  ShareMatrix& operator^=(ShareSpan<mode> o) {
+  ShareMatrix& operator^=(ShareCSpan<mode> o) {
     assert (rows() == o.rows());
     assert (cols() == o.cols());
 
@@ -149,7 +211,7 @@ public:
     return *this;
   }
 
-  ShareMatrix operator^(ShareSpan<mode> o) const {
+  ShareMatrix operator^(ShareCSpan<mode> o) const {
     ShareMatrix out = *this;
     out ^= o;
     return out;
@@ -210,7 +272,7 @@ private:
 
 
 template <Mode mode>
-ShareMatrix<mode> operator*(const Matrix& x, ShareSpan<mode> y) {
+ShareMatrix<mode> operator*(const Matrix& x, ShareCSpan<mode> y) {
   const auto l = x.rows();
   const auto n = y.rows();
   const auto m = y.cols();
@@ -229,13 +291,13 @@ ShareMatrix<mode> operator*(const Matrix& x, ShareSpan<mode> y) {
 
 template <Mode mode>
 ShareMatrix<mode> operator*(const Matrix& x, const ShareMatrix<mode>& y) {
-  const ShareSpan<mode> yy = y;
+  const ShareCSpan<mode> yy = y;
   return x * yy;
 }
 
 
 template <Mode mode>
-ShareMatrix<mode> operator*(ShareSpan<mode> x, const Matrix& y) {
+ShareMatrix<mode> operator*(ShareCSpan<mode> x, const Matrix& y) {
   const auto l = x.rows();
   const auto n = y.rows();
   const auto m = y.cols();
@@ -254,15 +316,15 @@ ShareMatrix<mode> operator*(ShareSpan<mode> x, const Matrix& y) {
 
 template <Mode mode>
 ShareMatrix<mode> operator*(const ShareMatrix<mode>& x, const Matrix& y) {
-  const ShareSpan<mode> xx = x;
+  const ShareCSpan<mode> xx = x;
   return xx * y;
 }
 
 template <Mode mode>
-void outer_product(ShareSpan<mode>, ShareSpan<mode>, ShareMatrix<mode>&);
+void outer_product(ShareCSpan<mode>, ShareCSpan<mode>, ShareMatrix<mode>&);
 
 template <Mode mode>
-ShareMatrix<mode> outer_product(ShareSpan<mode> x, ShareSpan<mode> y) {
+ShareMatrix<mode> outer_product(ShareCSpan<mode> x, ShareCSpan<mode> y) {
   ShareMatrix<mode> out(x.rows(), y.cols());
   outer_product(x, y, out);
   return out;
@@ -271,10 +333,10 @@ ShareMatrix<mode> outer_product(ShareSpan<mode> x, ShareSpan<mode> y) {
 
 // Computes (a + color(a)) x b where x denotes the vector outer product.
 template <Mode mode>
-void half_outer_product(const ShareSpan<mode>&, const ShareSpan<mode>&, ShareMatrix<mode>&);
+void half_outer_product(const ShareCSpan<mode>&, const ShareCSpan<mode>&, const ShareSpan<mode>&);
 
 template <Mode mode>
-ShareMatrix<mode> half_outer_product(ShareSpan<mode> x, ShareSpan<mode> y) {
+ShareMatrix<mode> half_outer_product(ShareCSpan<mode> x, ShareCSpan<mode> y) {
   ShareMatrix<mode> out(x.rows(), y.cols());
   half_outer_product(x, y, out);
   return out;
@@ -298,7 +360,7 @@ inline Matrix decode(const ShareMatrix<Mode::G>& g, const ShareMatrix<Mode::E>& 
 
 
 template <Mode mode>
-void naive_outer_product(const ShareSpan<mode>& x, const ShareSpan<mode>& y, ShareMatrix<mode>& out) {
+void naive_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode>& y, ShareMatrix<mode>& out) {
   for (std::size_t i = 0; i < x.rows(); ++i) {
     for (std::size_t j = 0; j < y.rows(); ++j) {
       out(i, j) = x[i] & y[j];
