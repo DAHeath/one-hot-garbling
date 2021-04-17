@@ -20,6 +20,7 @@ void unary_outer_product(
 
   const auto n = x.rows();
   const auto m = y.rows();
+  const auto l = out.rows();
   assert(out.cols() == m);
 
   std::vector<Share<mode>> seeds(1 << n);
@@ -112,7 +113,9 @@ void unary_outer_product(
         sum ^= s;
         ++Share<mode>::nonce;
 
-        f(i, j, s, out);
+        for (std::size_t k = 0; k < l; ++k) {
+          if (f(i, k)) { out(k, j) ^= s; }
+        }
       }
       sum ^= y[j];
       sum.send();
@@ -125,12 +128,18 @@ void unary_outer_product(
         if (i != missing) {
           const auto s = seeds[i].H();
           e_sum ^= s;
-          f(i, j, s, out);
+
+          for (std::size_t k = 0; k < l; ++k) {
+            if (f(i, k)) { out(k, j) ^= s; }
+          }
         }
         ++Share<mode>::nonce;
       }
       const auto s = e_sum ^ g_sum ^ y[j];
-      f(missing, j, s, out);
+
+      for (std::size_t k = 0; k < l; ++k) {
+        if (f(missing, k)) { out(k, j) ^= s; }
+      }
     }
   }
 }

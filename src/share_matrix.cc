@@ -15,15 +15,8 @@ void partial_half_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode
   assert(out.rows() == n);
   assert(out.cols() == m);
 
-  const auto identity = [n](
-      std::size_t i, std::size_t j, const Share<mode>& s,
-      const ShareSpan<mode>& out) {
-
-    for (std::size_t k = 0; k < n; ++k) {
-      if ((i & (1 << k)) > 0) {
-        out(k, j) ^= s;
-      }
-    }
+  const auto identity = [](std::size_t i, std::size_t j) {
+    return (i & (1 << j)) > 0;
   };
 
   unary_outer_product<mode>(identity, x, y, out);
