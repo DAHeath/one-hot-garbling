@@ -27,7 +27,10 @@ ShareMatrix<mode> test_matrix() {
   y(3, 3) = Share<mode>::ginput(true);
   y(1, 3) = Share<mode>::ginput(true);
 
-  return x*y;
+  MatrixView<const Share<mode>&> xx = x;
+  MatrixView<const Share<mode>&> yy = y;
+
+  return xx*yy;
   /* return x * y; */
   /* return naive_matrix_multiplication<mode>(x, y); */
 }

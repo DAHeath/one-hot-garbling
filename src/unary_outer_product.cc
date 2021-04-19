@@ -5,7 +5,8 @@
 
 
 template <Mode mode>
-std::vector<Share<mode>> populate_seeds(const ShareCSpan<mode>& x, std::size_t& missing) {
+std::vector<Share<mode>> populate_seeds(
+    const MatrixView<const Share<mode>&>& x, std::size_t& missing) {
   const auto n = x.rows();
 
   // We maintain the seed buffer by putting seeds into appropriate tree locations.
@@ -105,7 +106,7 @@ struct GCtxt {
   std::span<const Share<Mode::G>> seeds;
   std::span<Share<Mode::G>> messages;
   const MatrixView<Share<Mode::G>&>* out;
-  const ShareCSpan<Mode::G>* y;
+  const MatrixView<const Share<Mode::G>&>* y;
   const Table* f;
 };
 
@@ -185,7 +186,7 @@ struct ECtxt {
   std::span<const Share<Mode::E>> seeds;
   std::span<Share<Mode::E>> messages;
   const MatrixView<Share<Mode::E>&>* out;
-  const ShareCSpan<Mode::E>* y;
+  const MatrixView<const Share<Mode::E>&>* y;
   const Table* f;
 };
 
@@ -261,8 +262,8 @@ void initialize_ejobs() {
 template <Mode mode>
 void unary_outer_product(
     const Table& f,
-    const ShareCSpan<mode>& x,
-    const ShareCSpan<mode>& y,
+    const MatrixView<const Share<mode>&>& x,
+    const MatrixView<const Share<mode>&>& y,
     const MatrixView<Share<mode>&>& out) {
 
   assert(x.cols() == 1);
@@ -330,11 +331,11 @@ void unary_outer_product(
 
 template void unary_outer_product(
     const Table&,
-    const ShareCSpan<Mode::G>&,
-    const ShareCSpan<Mode::G>&,
+    const MatrixView<const Share<Mode::G>&>&,
+    const MatrixView<const Share<Mode::G>&>&,
     const MatrixView<Share<Mode::G>&>&);
 template void unary_outer_product(
     const Table&,
-    const ShareCSpan<Mode::E>&,
-    const ShareCSpan<Mode::E>&,
+    const MatrixView<const Share<Mode::E>&>&,
+    const MatrixView<const Share<Mode::E>&>&,
     const MatrixView<Share<Mode::E>&>&);

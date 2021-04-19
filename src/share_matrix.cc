@@ -18,8 +18,8 @@ IdentityTable the_identity_table { };
 
 template <Mode mode>
 void partial_half_outer_product(
-    const ShareCSpan<mode>& x,
-    const ShareCSpan<mode>& y,
+    const MatrixView<const Share<mode>&>& x,
+    const MatrixView<const Share<mode>&>& y,
     const MatrixView<Share<mode>&>& out) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
@@ -34,8 +34,8 @@ void partial_half_outer_product(
 
 template <Mode mode>
 void half_outer_product(
-    const ShareCSpan<mode>& X,
-    const ShareCSpan<mode>& Y,
+    const MatrixView<const Share<mode>&>& X,
+    const MatrixView<const Share<mode>&>& Y,
     const MatrixView<Share<mode>&>& out) {
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
@@ -62,60 +62,70 @@ void half_outer_product(
 }
 
 template void half_outer_product(
-    const ShareCSpan<Mode::G>&,
-    const ShareCSpan<Mode::G>&,
+    const MatrixView<const Share<Mode::G>&>&,
+    const MatrixView<const Share<Mode::G>&>&,
     const MatrixView<Share<Mode::G>&>&);
 template void half_outer_product(
-    const ShareCSpan<Mode::E>&,
-    const ShareCSpan<Mode::E>&,
+    const MatrixView<const Share<Mode::E>&>&,
+    const MatrixView<const Share<Mode::E>&>&,
     const MatrixView<Share<Mode::E>&>&);
 
 
 
 
 template <Mode mode>
-void outer_product(ShareCSpan<mode> X, ShareCSpan<mode> Y, ShareMatrix<mode>& out) {
+void outer_product(
+    const MatrixView<const Share<mode>&>& X,
+    const MatrixView<const Share<mode>&>& Y,
+    const MatrixView<Share<mode>&>& out) {
   // An outer product can be computed by half outer products.
   // Unfortunately, due to exponential computation scaling, we need to "chunk" the outer product into slices.
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
 
-  const auto x = ShareMatrix<mode>::constant(X.color());
-  const auto xy = ShareMatrix<mode>::constant(X.color().outer_product(Y.color()));
+  const auto x = ShareMatrix<mode>::constant(color(X));
+  const auto xy = ShareMatrix<mode>::constant(color(X).outer_product(color(Y)));
 
   half_outer_product<mode>(X, Y, out);
-  out.transpose();
-  half_outer_product<mode>(Y, x, out);
-  out.transpose();
+  half_outer_product<mode>(Y, x, transpose(out));
   out ^= xy;
 }
 
 
-template ShareMatrix<Mode::G> outer_product(const ShareCSpan<Mode::G>&, const ShareCSpan<Mode::G>&);
-template ShareMatrix<Mode::E> outer_product(const ShareCSpan<Mode::E>&, const ShareCSpan<Mode::E>&);
+/* template ShareMatrix<Mode::G> outer_product(const ShareCSpan<Mode::G>&, const ShareCSpan<Mode::G>&); */
+/* template ShareMatrix<Mode::E> outer_product(const ShareCSpan<Mode::E>&, const ShareCSpan<Mode::E>&); */
 
 
 template <Mode mode>
-ShareMatrix<mode> ShareMatrix<mode>::operator*(const ShareMatrix<mode>& o) const {
-  const auto l = rows();
-  const auto n = o.rows();
-  const auto m = o.cols();
-  assert (cols() == n);
+ShareMatrix<mode> operator*(
+    const MatrixView<const Share<mode>&>& x,
+    const MatrixView<const Share<mode>&>& y) {
+  const auto l = x.rows();
+  const auto n = y.rows();
+  const auto m = y.cols();
+  assert (x.cols() == n);
 
   ShareMatrix<mode> out(l, m);
+  MatrixView<Share<mode>&> out_view = out;
   for (std::size_t i = 0; i < n; ++i) {
-    outer_product(column(i), o.row(i), out);
+    outer_product(column(i, x), row(i, y), out_view);
   }
   return out;
 }
 
 
-template ShareMatrix<Mode::G> ShareMatrix<Mode::G>::operator*(const ShareMatrix<Mode::G>&) const;
-template ShareMatrix<Mode::E> ShareMatrix<Mode::E>::operator*(const ShareMatrix<Mode::E>&) const;
+template ShareMatrix<Mode::G> operator*(
+    const MatrixView<const Share<Mode::G>&>&,
+    const MatrixView<const Share<Mode::G>&>&);
+template ShareMatrix<Mode::E> operator*(
+    const MatrixView<const Share<Mode::E>&>&,
+    const MatrixView<const Share<Mode::E>&>&);
 
 
 template <Mode mode>
-ShareMatrix<mode> naive_matrix_multiplication(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+ShareMatrix<mode> naive_matrix_multiplication(
+    const MatrixView<const Share<mode>&>& x,
+    const MatrixView<const Share<mode>&>& y) {
   const auto l = x.rows();
   const auto n = y.rows();
   const auto m = y.cols();
@@ -123,13 +133,15 @@ ShareMatrix<mode> naive_matrix_multiplication(const ShareMatrix<mode>& x, const 
 
   ShareMatrix<mode> out(l, m);
   for (std::size_t i = 0; i < n; ++i) {
-    naive_outer_product<mode>(x.column(i), y.row(i), out);
+    naive_outer_product<mode>(column(i, x), row(i, y), out);
   }
   return out;
 }
 
 
 template ShareMatrix<Mode::G> naive_matrix_multiplication<Mode::G>(
-    const ShareMatrix<Mode::G>&, const ShareMatrix<Mode::G>&);
+    const MatrixView<const Share<Mode::G>&>&,
+    const MatrixView<const Share<Mode::G>&>&);
 template ShareMatrix<Mode::E> naive_matrix_multiplication<Mode::E>(
-    const ShareMatrix<Mode::E>&, const ShareMatrix<Mode::E>&);
+    const MatrixView<const Share<Mode::E>&>&,
+    const MatrixView<const Share<Mode::E>&>&);
