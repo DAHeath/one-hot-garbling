@@ -11,30 +11,6 @@
 #include <iostream>
 
 
-inline std::array<std::size_t, 2> translate_array2(
-    const std::array<std::size_t, 4>& A,
-    const std::array<std::size_t, 2>& x) {
-  std::array<std::size_t, 2> out;
-
-  out[0] = A[0]*x[0] + A[2]*x[1];
-  out[1] = A[1]*x[0] + A[3]*x[1];
-
-  return out;
-}
-
-inline std::array<std::size_t, 4> translate_array4(
-    const std::array<std::size_t, 4>& A,
-    const std::array<std::size_t, 4>& B) {
-  std::array<std::size_t, 4> out;
-
-  out[0] = A[0]*B[0] + A[2]*B[1];
-  out[1] = A[1]*B[0] + A[3]*B[1];
-  out[2] = A[0]*B[2] + A[2]*B[3];
-  out[3] = A[1]*B[2] + A[3]*B[3];
-
-  return out;
-}
-
 inline std::array<std::size_t, 2> shift_array(
     const std::array<std::size_t, 2>& x,
     const std::array<std::size_t, 2>& y) {
@@ -177,20 +153,6 @@ public:
   }
 
   static ShareMatrix vector(std::size_t n) { return { n, 1 }; }
-
-/*   // Column vector containing the `i`th row. */
-/*   MatrixView<const Share<mode>&> row(std::size_t i) const { */
-/*     std::span<const Share<mode>> v = vals; */
-/*     v = v.subspan(i); */
-/*     return transpose(matrix_const_span(1, m, v)); */
-/*   } */
-
-/*   // Column vector containing the `j`th column. */
-/*   MatrixView<const Share<mode>&> column(std::size_t j) const { */
-/*     std::span v = vals; */
-/*     v = v.subspan(j*n); */
-/*     return matrix_const_span(n, 1, v); */
-/*   } */
 
   Share<mode>& operator()(std::size_t i, std::size_t j) {
     return vals[j*n + i];
