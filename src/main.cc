@@ -16,7 +16,7 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  constexpr std::size_t n = 256;
+  constexpr std::size_t n = 6;
 
   auto x = ShareMatrix<mode>(n, n);
   for (std::size_t i = 0; i < n; ++i) {
