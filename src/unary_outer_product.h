@@ -15,7 +15,10 @@
 // The resulting matrix is l x m, and is in-place added into `out`.
 template <Mode mode>
 void unary_outer_product(
-    const Table&, const ShareCSpan<mode>&, const ShareCSpan<mode>&, const ShareSpan<mode>&);
+    const Table&,
+    const ShareCSpan<mode>&,
+    const ShareCSpan<mode>&,
+    const MatrixView<Share<mode>&>&);
 
 void initialize_gjobs();
 void initialize_ejobs();

@@ -104,7 +104,7 @@ struct GCtxt {
   std::size_t l;
   std::span<const Share<Mode::G>> seeds;
   std::span<Share<Mode::G>> messages;
-  const ShareSpan<Mode::G>* out;
+  const MatrixView<Share<Mode::G>&>* out;
   const ShareCSpan<Mode::G>* y;
   const Table* f;
 };
@@ -184,7 +184,7 @@ struct ECtxt {
   std::size_t l;
   std::span<const Share<Mode::E>> seeds;
   std::span<Share<Mode::E>> messages;
-  const ShareSpan<Mode::E>* out;
+  const MatrixView<Share<Mode::E>&>* out;
   const ShareCSpan<Mode::E>* y;
   const Table* f;
 };
@@ -260,7 +260,10 @@ void initialize_ejobs() {
 
 template <Mode mode>
 void unary_outer_product(
-    const Table& f, const ShareCSpan<mode>& x, const ShareCSpan<mode>& y, const ShareSpan<mode>& out) {
+    const Table& f,
+    const ShareCSpan<mode>& x,
+    const ShareCSpan<mode>& y,
+    const MatrixView<Share<mode>&>& out) {
 
   assert(x.cols() == 1);
   assert(y.cols() == 1);
@@ -329,9 +332,9 @@ template void unary_outer_product(
     const Table&,
     const ShareCSpan<Mode::G>&,
     const ShareCSpan<Mode::G>&,
-    const ShareSpan<Mode::G>&);
+    const MatrixView<Share<Mode::G>&>&);
 template void unary_outer_product(
     const Table&,
     const ShareCSpan<Mode::E>&,
     const ShareCSpan<Mode::E>&,
-    const ShareSpan<Mode::E>&);
+    const MatrixView<Share<Mode::E>&>&);

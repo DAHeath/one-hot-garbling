@@ -17,7 +17,10 @@ IdentityTable the_identity_table { };
 
 
 template <Mode mode>
-void partial_half_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode>& y, const ShareSpan<mode>& out) {
+void partial_half_outer_product(
+    const ShareCSpan<mode>& x,
+    const ShareCSpan<mode>& y,
+    const MatrixView<Share<mode>&>& out) {
   assert(x.cols() == 1);
   assert(y.cols() == 1);
   const auto n = x.rows();
@@ -30,7 +33,10 @@ void partial_half_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode
 
 
 template <Mode mode>
-void half_outer_product(const ShareCSpan<mode>& X, const ShareCSpan<mode>& Y, const ShareSpan<mode>& out) {
+void half_outer_product(
+    const ShareCSpan<mode>& X,
+    const ShareCSpan<mode>& Y,
+    const MatrixView<Share<mode>&>& out) {
   assert(X.cols() == 1);
   assert(Y.cols() == 1);
 
@@ -50,13 +56,19 @@ void half_outer_product(const ShareCSpan<mode>& X, const ShareCSpan<mode>& Y, co
     for (std::size_t i = 0; i < slice_size; ++i) {
       slice[i] = X[i + s*def];
     }
-    auto part = out.subrow_matrix(def*s, def*s + slice_size);
+    auto part = subrows(def*s, def*s + slice_size, out);
     partial_half_outer_product<mode>(slice, Y, part);
   }
 }
 
-template void half_outer_product(const ShareCSpan<Mode::G>&, const ShareCSpan<Mode::G>&, const ShareSpan<Mode::G>&);
-template void half_outer_product(const ShareCSpan<Mode::E>&, const ShareCSpan<Mode::E>&, const ShareSpan<Mode::E>&);
+template void half_outer_product(
+    const ShareCSpan<Mode::G>&,
+    const ShareCSpan<Mode::G>&,
+    const MatrixView<Share<Mode::G>&>&);
+template void half_outer_product(
+    const ShareCSpan<Mode::E>&,
+    const ShareCSpan<Mode::E>&,
+    const MatrixView<Share<Mode::E>&>&);
 
 
 
@@ -79,8 +91,8 @@ void outer_product(ShareCSpan<mode> X, ShareCSpan<mode> Y, ShareMatrix<mode>& ou
 }
 
 
-template ShareMatrix<Mode::G> outer_product(ShareCSpan<Mode::G>, ShareCSpan<Mode::G>);
-template ShareMatrix<Mode::E> outer_product(ShareCSpan<Mode::E>, ShareCSpan<Mode::E>);
+template ShareMatrix<Mode::G> outer_product(const ShareCSpan<Mode::G>&, const ShareCSpan<Mode::G>&);
+template ShareMatrix<Mode::E> outer_product(const ShareCSpan<Mode::E>&, const ShareCSpan<Mode::E>&);
 
 
 template <Mode mode>
