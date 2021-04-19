@@ -16,7 +16,7 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  constexpr std::size_t n = 4;
+  constexpr std::size_t n = 256;
 
   auto x = ShareMatrix<mode>(n, n);
   for (std::size_t i = 0; i < n; ++i) {
@@ -27,8 +27,8 @@ ShareMatrix<mode> test_matrix() {
   y(3, 3) = Share<mode>::ginput(true);
   y(1, 3) = Share<mode>::ginput(true);
 
-  MatrixView<const Share<mode>&> xx = x;
-  MatrixView<const Share<mode>&> yy = y;
+  MatrixView<const Share<mode>> xx = x;
+  MatrixView<const Share<mode>> yy = y;
 
   return xx*yy;
   /* return x * y; */

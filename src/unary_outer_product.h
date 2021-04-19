@@ -16,9 +16,9 @@
 template <Mode mode>
 void unary_outer_product(
     const Table&,
-    const MatrixView<const Share<mode>&>&,
-    const MatrixView<const Share<mode>&>&,
-    const MatrixView<Share<mode>&>&);
+    const MatrixView<const Share<mode>>&,
+    const MatrixView<const Share<mode>>&,
+    const MatrixView<Share<mode>>&);
 
 void initialize_gjobs();
 void initialize_ejobs();
