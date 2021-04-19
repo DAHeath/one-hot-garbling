@@ -1,9 +1,19 @@
 #include "share_matrix.h"
 #include "unary_outer_product.h"
+#include "table.h"
 
 #include <iostream>
 
-constexpr std::size_t default_outer_product_slice_size = 8;
+constexpr std::size_t default_outer_product_slice_size = 5;
+
+
+struct IdentityTable : public Table {
+  std::size_t operator()(std::size_t i) const {
+    return i;
+  }
+};
+
+IdentityTable the_identity_table { };
 
 
 template <Mode mode>
@@ -15,11 +25,7 @@ void partial_half_outer_product(const ShareCSpan<mode>& x, const ShareCSpan<mode
   assert(out.rows() == n);
   assert(out.cols() == m);
 
-  const auto identity = [](std::size_t i, std::size_t j) {
-    return (i & (1 << j)) > 0;
-  };
-
-  unary_outer_product<mode>(identity, x, y, out);
+  unary_outer_product<mode>(the_identity_table, x, y, out);
 }
 
 

@@ -1,6 +1,7 @@
 #include "share_matrix.h"
 #include "non_blackbox_gf256.h"
 #include "integer.h"
+#include "unary_outer_product.h"
 
 #include <iostream>
 
@@ -15,7 +16,7 @@ ShareMatrix<mode> test_integer() {
 
 template <Mode mode>
 ShareMatrix<mode> test_matrix() {
-  constexpr std::size_t n = 16;
+  constexpr std::size_t n = 4;
 
   auto x = ShareMatrix<mode>(n, n);
   for (std::size_t i = 0; i < n; ++i) {
@@ -24,9 +25,10 @@ ShareMatrix<mode> test_matrix() {
 
   auto y = ShareMatrix<mode>(n, n);
   y(3, 3) = Share<mode>::ginput(true);
-  y(10, 3) = Share<mode>::ginput(true);
+  y(1, 3) = Share<mode>::ginput(true);
 
-  return x * y;
+  return x*y;
+  /* return x * y; */
   /* return naive_matrix_multiplication<mode>(x, y); */
 }
 
@@ -54,8 +56,13 @@ int main() {
   Share<Mode::G>::initialize(key, seed);
   Share<Mode::E>::initialize(key, seed);
 
+  initialize_gjobs();
   const auto g = test_matrix<Mode::G>();
+  finalize_jobs();
+
+  initialize_ejobs();
   const auto e = test_matrix<Mode::E>();
+  finalize_jobs();
 
   std::cout << decode(g, e) << '\n';
   std::cout << std::dec << n_ciphertexts() << "\n";

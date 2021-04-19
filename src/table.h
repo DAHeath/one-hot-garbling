@@ -3,7 +3,8 @@
 
 
 struct Table {
-  virtual bool operator()(std::size_t i, std::size_t j) const = 0;
+  // get ith row of the table; max size of a table row is given by std::size_t
+  virtual std::size_t operator()(std::size_t i) const = 0;
   virtual ~Table() { };
 };
 
