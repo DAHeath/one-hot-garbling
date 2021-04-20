@@ -18,7 +18,8 @@ find_package(Boost REQUIRED)
 
 file(GLOB sources "src/*.cc")
 
+add_subdirectory(emp-ot)
+
 add_executable(GarbledPoints ${sources})
 target_include_directories(GarbledPoints PUBLIC src ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} emp-ot/src)
-target_link_libraries(GarbledPoints ${OPENSSL_LIBRARIES})
-
+target_link_libraries(GarbledPoints ${OPENSSL_LIBRARIES} Harp)

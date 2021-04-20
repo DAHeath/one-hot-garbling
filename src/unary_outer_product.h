@@ -22,6 +22,7 @@ void unary_outer_product(
 
 void initialize_gjobs();
 void initialize_ejobs();
-void finalize_jobs();
+void finalize_gjobs();
+void finalize_ejobs();
 
 #endif

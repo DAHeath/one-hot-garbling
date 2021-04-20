@@ -1,5 +1,6 @@
 #include "share.h"
 #include "prg.h"
+#include "link.h"
 
 #include <vector>
 #include <iomanip>
@@ -40,22 +41,37 @@ template<> Share<Mode::G> Share<Mode::G>::bit(bool b) {
 }
 
 
+
+thread_local Link* link;
+
+Link** the_link() { return &link; }
+
+
 std::size_t ptr = 0;
 std::vector<std::bitset<128>> messages;
 
 
 std::size_t n_ciphertexts() {
-  return messages.size();
+  return 0;
+  /* return messages.size(); */
 }
 
 
 template<> void Share<Mode::G>::send() const {
-  messages.push_back(val);
+  static std::array<std::byte, 16> buffer;
+  memcpy(buffer.data(), &val, 16);
+  link->send(buffer);
+  /* messages.push_back(val); */
 }
 
 
 template<> Share<Mode::E> Share<Mode::E>::recv() {
-  return messages[ptr++];
+  static std::array<std::byte, 16> buffer;
+  link->recv(buffer);
+  Share<Mode::E> out;
+  memcpy(&out.val, buffer.data(), 16);
+  return out;
+  /* return messages[ptr++]; */
 }
 
 

@@ -91,13 +91,21 @@ std::vector<Share<mode>> populate_seeds(
 
 
 // multithreading coordiation
-std::vector<std::thread> threads;
-std::vector<int> ready;
 std::size_t njobs;
-std::atomic<int> finished_job_counter;
-std::condition_variable cv;
-std::mutex mutex;
-bool done;
+
+std::vector<std::thread> g_threads;
+std::vector<int> g_ready;
+std::atomic<int> g_finished_job_counter;
+std::condition_variable g_cv;
+std::mutex g_mutex;
+bool g_done;
+
+std::vector<std::thread> e_threads;
+std::vector<int> e_ready;
+std::atomic<int> e_finished_job_counter;
+std::condition_variable e_cv;
+std::mutex e_mutex;
+bool e_done;
 
 
 struct GCtxt {
@@ -140,41 +148,41 @@ std::vector<GJob> gjobs;
 
 
 void gjob(std::size_t job_number) {
-  ++finished_job_counter;
+  ++g_finished_job_counter;
   while (true) {
-    std::unique_lock<std::mutex> lock(mutex);
-    cv.wait(lock, [job_number] { return ready[job_number] > 0 || done; });
-    if (done) { return; }
-    ready[job_number] = 0;
+    std::unique_lock<std::mutex> lock(g_mutex);
+    g_cv.wait(lock, [job_number] { return g_ready[job_number] > 0 || g_done; });
+    if (g_done) { return; }
+    g_ready[job_number] = 0;
     lock.unlock();
     gjobs[job_number]();
-    ++finished_job_counter;
+    ++g_finished_job_counter;
   }
 }
 
 
 void initialize_gjobs() {
-  done = false;
+  g_done = false;
   /* njobs = std::thread::hardware_concurrency(); */
   njobs = 4;
   gjobs.resize(njobs);
-  ready.resize(njobs);
-  threads.resize(0);
+  g_ready.resize(njobs);
+  g_threads.resize(0);
   for (std::size_t i = 0; i < njobs; ++i) {
-    threads.emplace_back([i] { gjob(i); });
+    g_threads.emplace_back([i] { gjob(i); });
   }
 
   int expected = njobs;
-  while(!atomic_compare_exchange_strong(&finished_job_counter, &expected, 0)) {
+  while(!atomic_compare_exchange_strong(&g_finished_job_counter, &expected, 0)) {
     expected = njobs;
     // wait until all jobs start
   }
 }
 
-void finalize_jobs() {
-  done = true;
-  cv.notify_all();
-  for (auto& th: threads) { th.join(); }
+void finalize_gjobs() {
+  g_done = true;
+  g_cv.notify_all();
+  for (auto& th: g_threads) { th.join(); }
 }
 
 
@@ -227,35 +235,41 @@ std::vector<EJob> ejobs;
 
 
 void ejob(std::size_t job_number) {
-  ++finished_job_counter;
+  ++e_finished_job_counter;
   while (true) {
-    std::unique_lock<std::mutex> lock(mutex);
-    cv.wait(lock, [job_number] { return ready[job_number] > 0 || done; });
-    if (done) { return; }
-    ready[job_number] = 0;
+    std::unique_lock<std::mutex> lock(e_mutex);
+    e_cv.wait(lock, [job_number] { return e_ready[job_number] > 0 || e_done; });
+    if (e_done) { return; }
+    e_ready[job_number] = 0;
     lock.unlock();
     ejobs[job_number]();
-    ++finished_job_counter;
+    ++e_finished_job_counter;
   }
 }
 
 
 void initialize_ejobs() {
-  done = false;
+  e_done = false;
   /* njobs = std::thread::hardware_concurrency(); */
   njobs = 4;
   ejobs.resize(njobs);
-  ready.resize(njobs);
-  threads.resize(0);
+  e_ready.resize(njobs);
+  e_threads.resize(0);
   for (std::size_t i = 0; i < njobs; ++i) {
-    threads.emplace_back([i] { ejob(i); });
+    e_threads.emplace_back([i] { ejob(i); });
   }
 
   int expected = njobs;
-  while(!atomic_compare_exchange_strong(&finished_job_counter, &expected, 0)) {
+  while(!atomic_compare_exchange_strong(&e_finished_job_counter, &expected, 0)) {
     expected = njobs;
     // wait until all jobs start
   }
+}
+
+void finalize_ejobs() {
+  e_done = true;
+  e_cv.notify_all();
+  for (auto& th: e_threads) { th.join(); }
 }
 
 
@@ -285,18 +299,18 @@ void unary_outer_product(
     gctxt = { n, l, seeds, messages, &out, &y, &f };
 
     {
-      std::unique_lock<std::mutex> lock(mutex);
+      std::unique_lock<std::mutex> lock(g_mutex);
       for (std::size_t jb = 0; jb < njobs; ++jb) {
         GJob job { jb*(m/njobs), std::min((jb+1)*(m/njobs), m) };
         gjobs[jb] = job;
-        ready[jb] = 1;
+        g_ready[jb] = 1;
       }
     }
 
     // dispatch jobs
-    cv.notify_all();
+    g_cv.notify_all();
     int expected = njobs;
-    while(!atomic_compare_exchange_strong(&finished_job_counter, &expected, 0)) {
+    while(!atomic_compare_exchange_strong(&g_finished_job_counter, &expected, 0)) {
       expected = njobs;
       // wait until all jobs finish
     }
@@ -308,18 +322,18 @@ void unary_outer_product(
     ectxt = { missing, n, l, seeds, messages, &out, &y, &f };
 
     {
-      std::unique_lock<std::mutex> lock(mutex);
+      std::unique_lock<std::mutex> lock(e_mutex);
       for (std::size_t jb = 0; jb < njobs; ++jb) {
         EJob job { jb*(m/njobs), std::min((jb+1)*(m/njobs), m) };
         ejobs[jb] = job;
-        ready[jb] = 1;
+        e_ready[jb] = 1;
       }
     }
 
     // dispatch jobs
-    cv.notify_all();
+    e_cv.notify_all();
     int expected = njobs;
-    while(!atomic_compare_exchange_strong(&finished_job_counter, &expected, 0)) {
+    while(!atomic_compare_exchange_strong(&e_finished_job_counter, &expected, 0)) {
       expected = njobs;
       // wait until all jobs finish
     }

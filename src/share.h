@@ -4,6 +4,7 @@
 
 #include "mode.h"
 #include "prg.h"
+#include "link.h"
 
 #include <bitset>
 #include <span>
@@ -11,6 +12,9 @@
 
 
 std::size_t n_ciphertexts();
+
+
+Link** the_link();
 
 
 template <Mode mode>
