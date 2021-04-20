@@ -4,6 +4,7 @@
 #include "unary_outer_product.h"
 #include "ferret.h"
 #include "net_link.h"
+#include "measure_link.h"
 
 #include <thread>
 #include <iostream>
@@ -11,31 +12,39 @@
 
 template <Mode mode>
 ShareMatrix<mode> test_integer() {
-  return integer_multiply(
-      ShareMatrix<mode>::constant(from_uint32(5555555)),
-      ShareMatrix<mode>::constant(from_uint32(44445)));
+  const auto x = ShareMatrix<mode>::constant(from_uint32(5555555));
+  const auto y = ShareMatrix<mode>::constant(from_uint32(44445));
+  MatrixView<const Share<mode>> xx = x;
+  MatrixView<const Share<mode>> yy = y;
+
+  return naive_integer_multiply(xx, yy);
+  /* return integer_multiply(xx, yy); */
 }
 
 
 template <Mode mode>
-ShareMatrix<mode> test_matrix() {
-  constexpr std::size_t n = 256;
+ShareMatrix<mode> test_outer_product() {
+  constexpr std::size_t n = 128;
+  auto x = ShareMatrix<mode>(n, 1);
+  auto y = ShareMatrix<mode>(n, 1);
+
+
+  return outer_product<mode>(x, y);
+}
+
+
+template <Mode mode>
+ShareMatrix<mode> test_matrix_multiplication() {
+  constexpr std::size_t n = 128;
 
   auto x = ShareMatrix<mode>(n, n);
-  for (std::size_t i = 0; i < n; ++i) {
-    x(i, i) = Share<mode>::ginput(true);
-  }
-
   auto y = ShareMatrix<mode>(n, n);
-  y(3, 3) = Share<mode>::ginput(true);
-  y(1, 3) = Share<mode>::ginput(true);
 
   MatrixView<const Share<mode>> xx = x;
   MatrixView<const Share<mode>> yy = y;
 
   return xx*yy;
-  /* return x * y; */
-  /* return naive_matrix_multiplication<mode>(x, y); */
+  /* return naive_matrix_multiplication(xx,yy); */
 }
 
 
@@ -54,55 +63,58 @@ ShareMatrix<mode> test_mul_gf256() {
 }
 
 
-void protocol() {
+constexpr std::size_t experiment_repetitions = 200;
 
-  std::thread th { [] {
+
+void protocol() {
+  PRG prg;
+  const auto key = prg();
+  const auto seed = prg();
+
+  ShareMatrix<Mode::G> g;
+  ShareMatrix<Mode::E> e;
+
+  std::thread th { [&] {
     // Generator
     NetLink link { nullptr, 11111 };
-    *the_link() = &link;
+    MeasureLink<NetLink> mlink { &link };
 
+    *the_link() = &mlink;
+
+    Share<Mode::G>::initialize(key, seed);
     initialize_gjobs();
-    test_matrix<Mode::G>();
+    for (std::size_t i = 0; i < experiment_repetitions; ++i) {
+      g = test_integer<Mode::G>();
+    }
     finalize_gjobs();
 
-    link.flush();
+    mlink.flush();
+
+    std::cout << mlink.count() << '\n';
   } };
 
   {
+
     // Evaluator
     NetLink link { "127.0.0.1", 11111 };
-    *the_link() = &link;
+    MeasureLink<NetLink> mlink { &link };
+    *the_link() = &mlink;
+    Share<Mode::E>::initialize(key, seed);
     initialize_ejobs();
-    test_matrix<Mode::E>();
+    for (std::size_t i = 0; i < experiment_repetitions; ++i) {
+      e = test_integer<Mode::E>();
+    }
     finalize_ejobs();
+
+    std::cout << mlink.count() << '\n';
   }
 
-
   th.join();
-  /* const char* m = (const char*)message.data(); */
-  /* std::cout << m << '\n'; */
+  
+  std::cout << to_uint32(decode(g, e)) << '\n';
 }
 
 
 int main() {
   protocol();
-  /* PRG prg; */
-  /* const auto key = prg(); */
-  /* const auto seed = prg(); */
-
-  /* Share<Mode::G>::initialize(key, seed); */
-  /* Share<Mode::E>::initialize(key, seed); */
-
-  /* initialize_gjobs(); */
-  /* const auto g = test_matrix<Mode::G>(); */
-  /* finalize_jobs(); */
-
-  /* initialize_ejobs(); */
-  /* const auto e = test_matrix<Mode::E>(); */
-  /* finalize_jobs(); */
-
-  /* std::cout << decode(g, e) << '\n'; */
-  /* std::cout << std::dec << n_ciphertexts() << "\n"; */
-
-  /* std::cout << byte_to_vector(invert_gf256(129)) << '\n'; */
 }

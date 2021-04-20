@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-constexpr std::size_t default_outer_product_slice_size = 5;
+constexpr std::size_t default_outer_product_slice_size = 8;
 
 
 struct IdentityTable : public Table {

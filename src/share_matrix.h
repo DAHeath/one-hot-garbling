@@ -309,8 +309,9 @@ template <Mode mode>
 ShareMatrix<mode> outer_product(
     const MatrixView<const Share<mode>>& x,
     const MatrixView<const Share<mode>>& y) {
-  ShareMatrix<mode> out(x.rows(), y.cols());
-  outer_product(x, y, out);
+  ShareMatrix<mode> out(x.rows(), y.rows());
+  MatrixView<Share<mode>> view = out;
+  outer_product(x, y, view);
   return out;
 }
 
@@ -358,6 +359,15 @@ void naive_outer_product(
       out(i, j) = x[i] & y[j];
     }
   }
+}
+
+template <Mode mode>
+ShareMatrix<mode> naive_outer_product(
+    const MatrixView<const Share<mode>>& x,
+    const MatrixView<const Share<mode>>& y) {
+  ShareMatrix<mode> out(x.rows(), y.rows());
+  naive_outer_product(x, y, out);
+  return out;
 }
 
 
