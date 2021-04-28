@@ -93,7 +93,11 @@ ShareMatrix<mode> naive_integer_multiply(
   assert(y.cols() == 1);
   assert(y.rows() == n);
 
-  const auto xy = outer_product<mode>(x, y);
+  /* for (std::size_t i = 0; i < n; ++i) { */
+  /* } */
+
+
+  /* const auto xy = outer_product<mode>(x, y); */
 
   auto sum = ShareMatrix<mode>::vector(1);
   sum[0] = x[n-1] & y[0];

@@ -4,8 +4,6 @@
 
 #include <iostream>
 
-constexpr std::size_t default_outer_product_slice_size = 8;
-
 
 struct IdentityTable : public Table {
   std::size_t operator()(std::size_t i) const {
@@ -46,7 +44,7 @@ void half_outer_product(
   assert(out.rows() == n);
   assert(out.cols() == m);
 
-  const auto def = default_outer_product_slice_size;
+  const auto def = chunking_factor();
 
   for (std::size_t s = 0; s < (n + def-1)/def; ++s) {
     std::size_t slice_size = def;

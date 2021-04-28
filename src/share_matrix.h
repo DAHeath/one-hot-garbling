@@ -11,6 +11,9 @@
 #include <iostream>
 
 
+std::size_t& chunking_factor();
+
+
 inline std::array<std::size_t, 2> shift_array(
     const std::array<std::size_t, 2>& x,
     const std::array<std::size_t, 2>& y) {

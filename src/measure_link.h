@@ -25,6 +25,8 @@ public:
 
   std::size_t count() const { return n; }
 
+  void reset_count() { n = 0; }
+
 private:
   std::size_t n = 0;
   L* under;
