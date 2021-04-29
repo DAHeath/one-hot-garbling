@@ -69,7 +69,9 @@ ShareMatrix<mode> integer_add(
 template <Mode mode>
 ShareMatrix<mode> integer_add(
     const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
-  return integer_add(x.rows(), x, y);
+  MatrixView<const Share<mode>> xx = x;
+  MatrixView<const Share<mode>> yy = y;
+  return integer_add(x.rows(), xx, yy);
 }
 
 
@@ -252,6 +254,114 @@ ShareMatrix<mode> exponent(std::uint32_t x, const ShareMatrix<mode>& y) {
   return result;
 }
 
+
+// if s, x, else y
+template <Mode mode>
+ShareMatrix<mode> swap(
+    const Share<mode>& s,
+    const ShareMatrix<mode>& x,
+    const ShareMatrix<mode>& y) {
+
+  const auto n = x.rows();
+  const auto m = x.cols();
+
+  assert(y.rows() == n);
+  assert(y.cols() == m);
+
+  auto diff = x ^ y;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t j = 0; j < m; ++j) {
+      diff(i, j) &= s;
+    }
+  }
+
+  return diff ^ y;
+}
+
+
+
+template <Mode mode>
+ShareMatrix<mode> sub_if_greater(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+  assert(x.rows() == 32 && y.rows() == 32);
+  const auto diff = integer_sub<mode>(x, y);
+
+  const auto gt = ((x[31] == y[31]) & (x[31] != diff[31])) | (x[31] & ~y[31]);
+
+  return swap<mode>(gt, x, diff);
+}
+
+
+constexpr std::uint32_t p = 65521;
+
+template <Mode mode>
+ShareMatrix<mode> naive_mod_p(ShareMatrix<mode> x) {
+  for (std::uint32_t i = 0; i <= 16; ++i) {
+    x = sub_if_greater(x, ShareMatrix<mode>::constant(from_uint32(p * (1 << (16-i)))));
+  }
+  return x;
+}
+
+
+struct ModpTable : public Table {
+  ModpTable() { }
+  ModpTable(std::size_t shift) : shift(shift) { }
+
+  std::size_t operator()(std::size_t i) const {
+    return (i * (1 << shift)) % p;
+  }
+
+  std::size_t shift;
+};
+
+
+
+template <Mode mode>
+ShareMatrix<mode> mod_p(const ShareMatrix<mode>& x) {
+  auto one = ShareMatrix<mode>(1, 1);
+  one[0] = Share<mode>::bit(true);
+
+  /* const auto mask = ShareMatrix<mode>::uniform(32, 1); */
+  const auto mask = ShareMatrix<mode>(32, 1);
+  auto masked = integer_sub<mode>(x, mask);
+  masked.reveal();
+
+  // split into three chunks
+  ShareMatrix<mode> low(32, 1);
+  ShareMatrix<mode> mid(32, 1);
+  ShareMatrix<mode> high(32, 1);
+  for (std::size_t i = 0; i < 16; ++i) { low[i] = masked[i]; }
+
+  { // use hot to compute mod p for mid chunk
+    ShareMatrix<mode> mid_chunk(8, 1);
+    for (std::size_t i = 0; i < 8; ++i) { mid_chunk[i] = masked[i+16]; }
+
+    ModpTable table(16);
+
+    unary_outer_product<mode>(table, mid_chunk, one, mid);
+  }
+
+  { // use hot to compute mod p for high chunk
+    ShareMatrix<mode> high_chunk(8, 1);
+    for (std::size_t i = 0; i < 8; ++i) { high_chunk[i] = masked[i+24]; }
+
+    ModpTable table(24);
+
+    unary_outer_product<mode>(table, high_chunk, one, high);
+  }
+
+  auto out = integer_add<mode>(low, mid);
+  out = integer_add<mode>(out, high);
+  out = integer_add<mode>(out,
+      ShareMatrix<mode>::constant(from_uint32(to_uint32(color<mode>(mask)) % p)));
+
+  // sum cannot be more than 5p-1
+  out = sub_if_greater(out, ShareMatrix<mode>::constant(from_uint32(p * 4)));
+  out = sub_if_greater(out, ShareMatrix<mode>::constant(from_uint32(p * 2)));
+  out = sub_if_greater(out, ShareMatrix<mode>::constant(from_uint32(p)));
+
+  return out;
+}
 
 
 #endif

@@ -50,6 +50,11 @@ public:
     return (*this) ^ bit(true);
   }
 
+
+  constexpr Share operator==(const Share& o) const { return ~((*this) ^ o); }
+  constexpr Share operator!=(const Share& o) const { return (*this) ^ o; }
+  Share operator|(const Share& o) const { return ~(~(*this) & ~o); }
+
   Share H() const {
     return fixed_key(val ^ std::bitset<128> { nonce });
   }

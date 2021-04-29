@@ -39,6 +39,23 @@ ShareMatrix<mode> test_integer_exp() {
 
 
 template <Mode mode>
+ShareMatrix<mode> test_integer_modp() {
+
+  const auto x = ShareMatrix<mode>::constant(from_uint32(3215152));
+
+  for (std::size_t i = 0; i < reps; ++i) {
+    if (naive) {
+      naive_mod_p<mode>(x);
+    } else {
+      mod_p<mode>(x);
+    }
+  }
+
+  return { };
+}
+
+
+template <Mode mode>
 ShareMatrix<mode> test_integer_mul() {
   /* const auto x = ShareMatrix<mode>::constant(from_uint64(0)); */
   /* const auto y = ShareMatrix<mode>::constant(from_uint64(0)); */
@@ -154,7 +171,8 @@ void protocol() {
     initialize_gjobs();
     /* g = test_outer_product<Mode::G>(); */
     /* g = test_integer_mul<Mode::G>(); */
-    g = test_integer_exp<Mode::G>();
+    /* g = test_integer_exp<Mode::G>(); */
+    g = test_integer_modp<Mode::G>();
     /* g = test_mul_gf256<Mode::G>(); */
     finalize_gjobs();
 
@@ -174,7 +192,8 @@ void protocol() {
     initialize_ejobs();
     /* e = test_outer_product<Mode::E>(); */
     /* e = test_integer_mul<Mode::E>(); */
-    e = test_integer_exp<Mode::E>();
+    /* e = test_integer_exp<Mode::E>(); */
+    e = test_integer_modp<Mode::E>();
     /* e = test_mul_gf256<Mode::E>(); */
     finalize_ejobs();
 
