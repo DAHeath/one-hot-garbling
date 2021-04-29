@@ -39,12 +39,15 @@ ShareMatrix<mode> half_mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<m
 
 // Multiply x by y in GF(256)
 template <Mode mode>
-ShareMatrix<mode> full_mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+ShareMatrix<mode> mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
   return
     half_mul_gf256(x, y) ^
-    half_mul_gf256(y, ShareMatrix<mode>::constant(x.color())) ^
+    half_mul_gf256(y, ShareMatrix<mode>::constant(color<mode>(x))) ^
     ShareMatrix<mode>::constant(
-        byte_to_vector(mul_gf256(vector_to_byte(x.color()), vector_to_byte(y.color()))));
+        byte_to_vector(
+          mul_gf256(
+            vector_to_byte(color<mode>(x)),
+            vector_to_byte(color<mode>(y)))));
 }
 
 

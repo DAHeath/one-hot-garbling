@@ -301,7 +301,11 @@ void unary_outer_product(
     {
       std::unique_lock<std::mutex> lock(g_mutex);
       for (std::size_t jb = 0; jb < njobs; ++jb) {
-        GJob job { jb*(m/njobs), std::min((jb+1)*(m/njobs), m) };
+        const std::size_t slice = (m + njobs - 1)/njobs;
+        const std::size_t start = jb*slice;
+        const std::size_t stop = std::min((jb+1)*slice, m);
+
+        GJob job { start, stop };
         gjobs[jb] = job;
         g_ready[jb] = 1;
       }
@@ -324,7 +328,10 @@ void unary_outer_product(
     {
       std::unique_lock<std::mutex> lock(e_mutex);
       for (std::size_t jb = 0; jb < njobs; ++jb) {
-        EJob job { jb*(m/njobs), std::min((jb+1)*(m/njobs), m) };
+        const std::size_t slice = (m + njobs - 1)/njobs;
+        const std::size_t start = jb*slice;
+        const std::size_t stop = std::min((jb+1)*slice, m);
+        EJob job { start, stop };
         ejobs[jb] = job;
         e_ready[jb] = 1;
       }

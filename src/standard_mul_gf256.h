@@ -1,0 +1,166 @@
+#ifndef STANDARD_MUL_GF256_H__
+#define STANDARD_MUL_GF256_H__
+
+
+// Multiply in GF(256) with the AES polynomial
+// See http://cs-www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html
+template <Mode mode>
+ShareMatrix<mode> standard_mul_gf256(const ShareMatrix<mode>& x, const ShareMatrix<mode>& y) {
+  const auto a7 = x[0];
+  const auto a6 = x[1];
+  const auto a5 = x[2];
+  const auto a4 = x[3];
+  const auto a3 = x[4];
+  const auto a2 = x[5];
+  const auto a1 = x[6];
+  const auto a0 = x[7];
+  const auto b7 = y[0];
+  const auto b6 = y[1];
+  const auto b5 = y[2];
+  const auto b4 = y[3];
+  const auto b3 = y[4];
+  const auto b2 = y[5];
+  const auto b1 = y[6];
+  const auto b0 = y[7];
+
+  const auto t1 = a0 & b0;
+  const auto t2 = a0 & b1;
+  const auto t3 = a1 & b0;
+  const auto t4 = a0 & b2;
+  const auto t5 = a1 & b1;
+  const auto t6 = a2 & b0;
+  const auto t7 = a0 & b3;
+  const auto t8 = a1 & b2;
+  const auto t9 = a2 & b1;
+  const auto t10 = a3 & b0;
+  const auto t11 = a1 & b3;
+  const auto t12 = a2 & b2;
+  const auto t13 = a3 & b1;
+  const auto t14 = a2 & b3;
+  const auto t15 = a3 & b2;
+  const auto t16 = a3 & b3;
+  const auto t17 = a4 & b4;
+  const auto t18 = a4 & b5;
+  const auto t19 = a5 & b4;
+  const auto t20 = a4 & b6;
+  const auto t21 = a5 & b5;
+  const auto t22 = a6 & b4;
+  const auto t23 = a4 & b7;
+  const auto t24 = a5 & b6;
+  const auto t25 = a6 & b5;
+  const auto t26 = a7 & b4;
+  const auto t27 = a5 & b7;
+  const auto t28 = a6 & b6;
+  const auto t29 = a7 & b5;
+  const auto t30 = a6 & b7;
+  const auto t31 = a7 & b6;
+  const auto t32 = a7 & b7;
+  const auto t33 = a0 ^ a4;
+  const auto t34 = a1 ^ a5;
+  const auto t35 = a2 ^ a6;
+  const auto t36 = a3 ^ a7;
+  const auto t37 = b0 ^ b4;
+  const auto t38 = b1 ^ b5;
+  const auto t39 = b2 ^ b6;
+  const auto t40 = b3 ^ b7;
+  const auto t41 = t40 & t36;
+  const auto t42 = t40 & t35;
+  const auto t43 = t40 & t34;
+  const auto t44 = t40 & t33;
+  const auto t45 = t39 & t36;
+  const auto t46 = t39 & t35;
+  const auto t47 = t39 & t34;
+  const auto t48 = t39 & t33;
+  const auto t49 = t38 & t36;
+  const auto t50 = t38 & t35;
+  const auto t51 = t38 & t34;
+  const auto t52 = t38 & t33;
+  const auto t53 = t37 & t36;
+  const auto t54 = t37 & t35;
+  const auto t55 = t37 & t34;
+  const auto t56 = t37 & t33;
+  const auto t57 = t2 ^ t3;
+  const auto t58 = t4 ^ t5;
+  const auto t59 = t6 ^ t32;
+  const auto t60 = t7 ^ t8;
+  const auto t61 = t9 ^ t10;
+  const auto t62 = t60 ^ t61;
+  const auto t63 = t11 ^ t12;
+  const auto t64 = t13 ^ t63;
+  const auto t65 = t14 ^ t15;
+  const auto t66 = t18 ^ t19;
+  const auto t67 = t20 ^ t21;
+  const auto t68 = t22 ^ t67;
+  const auto t69 = t23 ^ t24;
+  const auto t70 = t25 ^ t26;
+  const auto t71 = t69 ^ t70;
+  const auto t72 = t27 ^ t28;
+  const auto t73 = t29 ^ t32;
+  const auto t74 = t30 ^ t31;
+  const auto t75 = t52 ^ t55;
+  const auto t76 = t48 ^ t51;
+  const auto t77 = t54 ^ t76;
+  const auto t78 = t44 ^ t47;
+  const auto t79 = t50 ^ t53;
+  const auto t80 = t78 ^ t79;
+  const auto t81 = t43 ^ t46;
+  const auto t82 = t49 ^ t81;
+  const auto t83 = t42 ^ t45;
+  const auto t84 = t71 ^ t74;
+  const auto t85 = t41 ^ t16;
+  const auto t86 = t85 ^ t68;
+  const auto t87 = t66 ^ t65;
+  const auto t88 = t83 ^ t87;
+  const auto t89 = t58 ^ t59;
+  const auto t90 = t72 ^ t73;
+  const auto t91 = t74 ^ t17;
+  const auto t92 = t64 ^ t91;
+  const auto t93 = t82 ^ t92;
+  const auto t94 = t80 ^ t62;
+  const auto t95 = t94 ^ t90;
+  const auto c7 = t95;
+  const auto t96 = t41 ^ t77;
+  const auto t97 = t84 ^ t89;
+  const auto t98 = t96 ^ t97;
+  const auto c6 = t98;
+  const auto t99 = t57 ^ t74;
+  const auto t100 = t83 ^ t75;
+  const auto t101 = t86 ^ t90;
+  const auto t102 = t99 ^ t100;
+  const auto t103 = t101 ^ t102;
+  const auto c5 = t103;
+  const auto t104 = t1 ^ t56;
+  const auto t105 = t90 ^ t104;
+  const auto t106 = t82 ^ t84;
+  const auto t107 = t88 ^ t105;
+  const auto t108 = t106 ^ t107;
+  const auto c4 = t108;
+  const auto t109 = t71 ^ t62;
+  const auto t110 = t86 ^ t109;
+  const auto t111 = t110 ^ t93;
+  const auto c3 = t111;
+  const auto t112 = t86 ^ t88;
+  const auto t113 = t89 ^ t112;
+  const auto c2 = t113;
+  const auto t114 = t57 ^ t32;
+  const auto t115 = t114 ^ t88;
+  const auto t116 = t115 ^ t93;
+  const auto c1 = t116;
+  const auto t117 = t93 ^ t1;
+  const auto c0 = t117;
+
+  ShareMatrix<mode> out(8, 1);
+  out[7] = c0;
+  out[6] = c1;
+  out[5] = c2;
+  out[4] = c3;
+  out[3] = c4;
+  out[2] = c5;
+  out[1] = c6;
+  out[0] = c7;
+
+  return out;
+}
+
+
+#endif

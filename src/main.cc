@@ -6,6 +6,7 @@
 #include "net_link.h"
 #include "measure_link.h"
 #include "standard_sbox.h"
+#include "standard_mul_gf256.h"
 
 #include <thread>
 #include <iostream>
@@ -20,7 +21,27 @@ bool naive = false;
 
 
 template <Mode mode>
-ShareMatrix<mode> test_integer() {
+ShareMatrix<mode> test_integer_exp() {
+
+  std::uint32_t x = 13;
+  const auto y = ShareMatrix<mode>::constant(from_uint32(15));
+
+  for (std::size_t i = 0; i < reps; ++i) {
+    if (naive) {
+      naive_exponent<mode>(x, y);
+    } else {
+      exponent<mode>(x, y);
+    }
+  }
+
+  return { };
+}
+
+
+template <Mode mode>
+ShareMatrix<mode> test_integer_mul() {
+  /* const auto x = ShareMatrix<mode>::constant(from_uint64(0)); */
+  /* const auto y = ShareMatrix<mode>::constant(from_uint64(0)); */
   const auto x = ShareMatrix<mode>::constant(from_uint32(0));
   const auto y = ShareMatrix<mode>::constant(from_uint32(0));
   MatrixView<const Share<mode>> xx = x;
@@ -50,15 +71,24 @@ ShareMatrix<mode> test_aes() {
     }
   }
 
+  return { };
+}
 
-  /* return { }; */
+
+template <Mode mode>
+ShareMatrix<mode> test_mul_gf256() {
+  const auto x = ShareMatrix<mode>::constant(byte_to_vector(1));
+  const auto y = ShareMatrix<mode>::constant(byte_to_vector(1));
+
+  for (std::size_t i = 0; i < reps; ++i) {
     if (naive) {
-      std::cout << "NAIVE\n";
-      return standard_aes_sbox<mode>(x);
+      standard_mul_gf256<mode>(x, y);
     } else {
-      std::cout << "IMPROVED\n";
-      return aes_sbox(x);
+      mul_gf256<mode>(x, y);
     }
+  }
+
+  return { };
 }
 
 
@@ -104,21 +134,6 @@ ShareMatrix<mode> test_matrix_multiplication() {
 }
 
 
-template <Mode mode>
-ShareMatrix<mode> test_mul_gf256() {
-  auto x = ShareMatrix<mode>(8, 1);
-  auto y = ShareMatrix<mode>(8, 1);
-
-  x[0] = Share<mode>::bit(true);
-  x[1] = Share<mode>::bit(true);
-
-  y[0] = Share<mode>::bit(true);
-  y[7] = Share<mode>::bit(true);
-
-  return aes_sbox<mode>(x);
-}
-
-
 void protocol() {
   PRG prg;
   const auto key = prg();
@@ -138,8 +153,9 @@ void protocol() {
     Share<Mode::G>::initialize(key, seed);
     initialize_gjobs();
     /* g = test_outer_product<Mode::G>(); */
-    /* g = test_integer<Mode::G>(); */
-    g = test_aes<Mode::G>();
+    /* g = test_integer_mul<Mode::G>(); */
+    g = test_integer_exp<Mode::G>();
+    /* g = test_mul_gf256<Mode::G>(); */
     finalize_gjobs();
 
     mlink.flush();
@@ -157,8 +173,9 @@ void protocol() {
     Share<Mode::E>::initialize(key, seed);
     initialize_ejobs();
     /* e = test_outer_product<Mode::E>(); */
-    /* e = test_integer<Mode::E>(); */
-    e = test_aes<Mode::E>();
+    /* e = test_integer_mul<Mode::E>(); */
+    e = test_integer_exp<Mode::E>();
+    /* e = test_mul_gf256<Mode::E>(); */
     finalize_ejobs();
 
     std::cout << mlink.count() << '\n';
@@ -166,14 +183,14 @@ void protocol() {
 
   th.join();
   
-  std::cout << decode(g, e) << '\n';
+  /* std::cout << to_uint32(decode(g, e)) << '\n'; */
 }
 
 
 int main(int argc, char** argv) {
 
   if (argc < 3) {
-    std::cerr << "usage: " << argv[0] << "<reps> <naive{0,1}> <n>\n";
+    std::cerr << "usage: " << argv[0] << " <reps> <naive{0,1}> <n>\n";
     std::exit(1);
   }
 
