@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70218" creator="Ipe 7.2.23">
-<info created="D:20210420125633" modified="D:20210420234955"/>
+<info created="D:20210420125633" modified="D:20210428203612"/>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -312,53 +312,53 @@ h
 <page>
 <layer name="alpha"/>
 <view layers="alpha" active="alpha"/>
-<path layer="alpha" stroke="black">
-160 784 m
-160 672 l
-336 672 l
-336 784 l
+<path layer="alpha" matrix="1 0 0 1 0 -32" stroke="black">
+176 784 m
+176 656 l
+304 656 l
+304 784 l
 h
 </path>
-<path stroke="black">
-208 768 m
-208 720 l
-272 720 l
-272 768 l
+<path matrix="1 0 0 1 -16 -32" stroke="black">
+208 752 m
+208 704 l
+256 704 l
+256 752 l
 h
 </path>
-<path stroke="black" rarrow="normal/normal">
+<path matrix="1 0 0 1 -32 -48" stroke="black" rarrow="normal/normal">
 352 752 m
 272 752 l
 272 752 l
 </path>
-<path stroke="black" rarrow="normal/normal">
-352 688 m
-176 688 l
+<path matrix="1 0 0 1 0 -32" stroke="black" rarrow="normal/normal">
+320 688 m
+192 688 l
 </path>
-<path matrix="1 0 0 1 16 0" stroke="black" rarrow="normal/normal">
-240 720 m
+<path matrix="1 0 0 1 -16 -32" stroke="black" rarrow="normal/normal">
+240 704 m
 240 688 l
 </path>
-<text matrix="1 0 0 1 -6.08116 -13.3322" transformations="translations" pos="240 752" stroke="black" type="label" width="10.069" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">\mathcal{C}</text>
-<path matrix="1 0 0 1 0.19255 0" stroke="black" rarrow="normal/normal">
-207.43 743.795 m
-143.875 743.813 l
+<text matrix="1 0 0 1 -28.2111 -62.3729" transformations="translations" pos="240 752" stroke="black" type="label" width="10.069" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">\mathcal{C}</text>
+<path matrix="1 0 0 1 0 -32" stroke="black" rarrow="normal/normal">
+191.623 727.795 m
+159.849 727.863 l
 </path>
-<text matrix="1 0 0 1 -76.6888 -52.6553" transformations="translations" pos="240 752" stroke="black" type="label" width="87.107" height="11.759" depth="6.03" valign="baseline" size="LARGE" style="math">\alpha \gets \mathcal{D}_{\textnormal{mask}}</text>
-<text matrix="1 0 0 1 -97.4859 -3.78874" transformations="translations" pos="240 752" stroke="black" type="label" width="8.849" height="7.412" depth="0" valign="baseline" size="LARGE" style="math">a</text>
-<text matrix="1 0 0 1 35.1153 -14.7357" transformations="translations" pos="240 752" stroke="black" type="label" width="49.493" height="12.896" depth="4.29" valign="baseline" size="LARGE" style="math">\mathcal{C}(a, \alpha)</text>
-<path stroke="black" rarrow="normal/normal">
+<text matrix="1 0 0 1 -60.6888 -116.655" transformations="translations" pos="240 752" stroke="black" type="label" width="87.107" height="11.759" depth="6.03" valign="baseline" size="LARGE" style="math">\alpha \gets \mathcal{D}_{\textnormal{mask}}</text>
+<text matrix="1 0 0 1 -81.4859 -51.7887" transformations="translations" pos="240 752" stroke="black" type="label" width="8.849" height="7.412" depth="0" valign="baseline" size="LARGE" style="math">a</text>
+<text matrix="1 0 0 1 3.1153 -62.7357" transformations="translations" pos="240 752" stroke="black" type="label" width="49.493" height="12.896" depth="4.29" valign="baseline" size="LARGE" style="math">\mathcal{C}(a, \alpha)</text>
+<path matrix="1 0 0 1 -32 -48" stroke="black" rarrow="normal/normal">
 304 816 m
 304 752 l
 </path>
-<text matrix="1 0 0 1 58.4867 65.4283" transformations="translations" pos="240 752" stroke="black" type="label" width="13.487" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">E</text>
-<text matrix="1 0 0 1 -78.6362 19.048" transformations="translations" pos="240 752" stroke="black" type="label" width="37.427" height="11.76" depth="3.35" valign="baseline" size="LARGE" style="math">\mathrm{Open}</text>
-<text matrix="1 0 0 1 -76.6888 43.3447" transformations="translations" pos="240 752" stroke="black" type="label" width="72.923" height="11.761" depth="4.66" valign="baseline" size="LARGE" style="math">x \gets \mathcal{D}_{\textnormal{out}}</text>
-<text matrix="1 0 0 1 67.1153 43.2953" transformations="translations" pos="240 752" stroke="black" type="label" width="81.029" height="14.257" depth="4.29" valign="baseline" size="LARGE" style="math">\mathcal{C}(a, \alpha) \stackrel{c}{=}  x </text>
-<path stroke="black" rarrow="normal/normal">
-304 656 m
-304 688 l
+<text matrix="1 0 0 1 26.4867 17.4283" transformations="translations" pos="240 752" stroke="black" type="label" width="13.487" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">E</text>
+<text matrix="1 0 0 1 -62.6362 -12.952" transformations="translations" pos="240 752" stroke="black" type="label" width="45.794" height="11.955" depth="0" valign="baseline" size="LARGE" style="math">\mathrm{Reveal}</text>
+<text matrix="1 0 0 1 -60.6888 43.3447" transformations="translations" pos="240 752" stroke="black" type="label" width="72.923" height="11.761" depth="4.66" valign="baseline" size="LARGE" style="math">x \gets \mathcal{D}_{\textnormal{out}}</text>
+<text matrix="1 0 0 1 -60.8847 11.2953" transformations="translations" pos="240 752" stroke="black" type="label" width="81.029" height="14.257" depth="4.29" valign="baseline" size="LARGE" style="math">\mathcal{C}(a, \alpha) \stackrel{c}{=}  x </text>
+<path matrix="1 0 0 1 0 -32" stroke="black" rarrow="normal/normal">
+272 640 m
+272 688 l
 </path>
-<text matrix="1 0 0 1 58.4867 -110.572" transformations="translations" pos="240 752" stroke="black" type="label" width="13.296" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">G</text>
+<text matrix="1 0 0 1 26.4867 -158.572" transformations="translations" pos="240 752" stroke="black" type="label" width="13.296" height="11.764" depth="0" valign="baseline" size="LARGE" style="math">G</text>
 </page>
 </ipe>

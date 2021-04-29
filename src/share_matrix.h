@@ -165,6 +165,21 @@ public:
     return vals[j*n + i];
   }
 
+  ShareMatrix& operator^=(const ShareMatrix<mode>& o) {
+    for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < m; ++j) {
+        (*this)(i, j) ^= o(i, j);
+      }
+    }
+    return *this;
+  }
+
+  ShareMatrix operator^(const ShareMatrix<mode>& o) const {
+    ShareMatrix out = *this;
+    out ^= o;
+    return out;
+  }
+
   // vector access
   Share<mode>& operator[](std::size_t i) {
     assert(cols() == 1);
@@ -330,8 +345,8 @@ template <Mode mode>
 ShareMatrix<mode> half_outer_product(
     const MatrixView<const Share<mode>>& x,
     const MatrixView<const Share<mode>>& y) {
-  ShareMatrix<mode> out(x.rows(), y.cols());
-  half_outer_product(x, y, out);
+  ShareMatrix<mode> out(x.rows(), y.rows());
+  half_outer_product<mode>(x, y, out);
   return out;
 }
 

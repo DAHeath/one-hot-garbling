@@ -5,6 +5,7 @@
 #include "ferret.h"
 #include "net_link.h"
 #include "measure_link.h"
+#include "standard_sbox.h"
 
 #include <thread>
 #include <iostream>
@@ -35,6 +36,29 @@ ShareMatrix<mode> test_integer() {
 
 
   return { };
+}
+
+template <Mode mode>
+ShareMatrix<mode> test_aes() {
+  const auto x = ShareMatrix<mode>::constant(byte_to_vector(1));
+
+  for (std::size_t i = 0; i < reps; ++i) {
+    if (naive) {
+      standard_aes_sbox<mode>(x);
+    } else {
+      aes_sbox(x);
+    }
+  }
+
+
+  /* return { }; */
+    if (naive) {
+      std::cout << "NAIVE\n";
+      return standard_aes_sbox<mode>(x);
+    } else {
+      std::cout << "IMPROVED\n";
+      return aes_sbox(x);
+    }
 }
 
 
@@ -114,7 +138,8 @@ void protocol() {
     Share<Mode::G>::initialize(key, seed);
     initialize_gjobs();
     /* g = test_outer_product<Mode::G>(); */
-    g = test_integer<Mode::G>();
+    /* g = test_integer<Mode::G>(); */
+    g = test_aes<Mode::G>();
     finalize_gjobs();
 
     mlink.flush();
@@ -132,7 +157,8 @@ void protocol() {
     Share<Mode::E>::initialize(key, seed);
     initialize_ejobs();
     /* e = test_outer_product<Mode::E>(); */
-    e = test_integer<Mode::E>();
+    /* e = test_integer<Mode::E>(); */
+    e = test_aes<Mode::E>();
     finalize_ejobs();
 
     std::cout << mlink.count() << '\n';
@@ -140,7 +166,7 @@ void protocol() {
 
   th.join();
   
-  /* std::cout << to_uint32(decode(g, e)) << '\n'; */
+  std::cout << decode(g, e) << '\n';
 }
 
 
@@ -148,6 +174,7 @@ int main(int argc, char** argv) {
 
   if (argc < 3) {
     std::cerr << "usage: " << argv[0] << "<reps> <naive{0,1}> <n>\n";
+    std::exit(1);
   }
 
   reps = atoi(argv[1]);
