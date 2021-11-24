@@ -13,7 +13,7 @@
 #include <chrono>
 
 
-thread_local MeasureLink<NetLink>* party_link;
+thread_local MeasureLink<GT::NetLink>* party_link;
 
 
 std::size_t reps = 1000;
@@ -161,43 +161,43 @@ void protocol() {
 
   std::thread th { [&] {
     // Generator
-    NetLink link { nullptr, 11111 };
-    MeasureLink<NetLink> mlink { &link };
+    GT::NetLink link { nullptr, 11111 };
+    MeasureLink<GT::NetLink> mlink { &link };
     party_link = &mlink;
 
     *the_link() = &mlink;
 
     Share<Mode::G>::initialize(key, seed);
     initialize_gjobs();
-    /* g = test_outer_product<Mode::G>(); */
+    g = test_outer_product<Mode::G>();
     /* g = test_integer_mul<Mode::G>(); */
     /* g = test_integer_exp<Mode::G>(); */
-    g = test_integer_modp<Mode::G>();
+    /* g = test_integer_modp<Mode::G>(); */
     /* g = test_mul_gf256<Mode::G>(); */
     finalize_gjobs();
 
     mlink.flush();
 
-    std::cout << mlink.count() << '\n';
+    /* std::cout << mlink.count() << '\n'; */
   } };
 
   {
 
     // Evaluator
-    NetLink link { "127.0.0.1", 11111 };
-    MeasureLink<NetLink> mlink { &link };
+    GT::NetLink link { "127.0.0.1", 11111 };
+    MeasureLink<GT::NetLink> mlink { &link };
     party_link = &mlink;
     *the_link() = &mlink;
     Share<Mode::E>::initialize(key, seed);
     initialize_ejobs();
-    /* e = test_outer_product<Mode::E>(); */
+    e = test_outer_product<Mode::E>();
     /* e = test_integer_mul<Mode::E>(); */
     /* e = test_integer_exp<Mode::E>(); */
-    e = test_integer_modp<Mode::E>();
+    /* e = test_integer_modp<Mode::E>(); */
     /* e = test_mul_gf256<Mode::E>(); */
     finalize_ejobs();
 
-    std::cout << mlink.count() << '\n';
+    std::cout << "GC size in bytes: " << mlink.count() << '\n';
   }
 
   th.join();
@@ -209,7 +209,7 @@ void protocol() {
 int main(int argc, char** argv) {
 
   if (argc < 3) {
-    std::cerr << "usage: " << argv[0] << " <reps> <naive{0,1}> <n>\n";
+    std::cerr << "usage: " << argv[0] << " <test repetitions> <naive{0,1}> <outer product size>\n";
     std::exit(1);
   }
 

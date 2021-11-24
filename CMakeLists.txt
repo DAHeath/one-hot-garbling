@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
-project (GarbledPoints)
+project (OneHotGarbling)
 
 set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
@@ -7,7 +7,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-Wfatal-errors)
 
 set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_FLAGS "-pthread -Wall -march=native -O3 -maes -mrdseed -DNDEBUG")
 set(CMAKE_CXX_FLAGS "-pthread -Wall -march=native -O3 -maes -mrdseed -DDEBUG")
 
 if (APPLE)
@@ -20,6 +19,6 @@ file(GLOB sources "src/*.cc")
 
 add_subdirectory(emp-ot)
 
-add_executable(GarbledPoints ${sources})
-target_include_directories(GarbledPoints PUBLIC src ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} emp-ot/src)
-target_link_libraries(GarbledPoints ${OPENSSL_LIBRARIES} Harp)
+add_executable(one-hot ${sources})
+target_include_directories(one-hot PUBLIC src ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} emp-ot/src)
+target_link_libraries(one-hot ${OPENSSL_LIBRARIES} Harp)
